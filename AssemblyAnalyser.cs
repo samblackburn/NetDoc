@@ -14,7 +14,8 @@ namespace NetDoc
             return referencingAssembly.Modules
                 .SelectMany(a => a.Types)
                 .SelectMany(GetAllBodies)
-                .SelectMany<MethodDefinition, Instruction>(y => y.Body.Instructions)
+                .Where(definition => definition != null)
+                .SelectMany(y => y.Body.Instructions)
                 .Where(IsCall)
                 .Select(c => new Call(c));
         }

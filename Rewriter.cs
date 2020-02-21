@@ -11,24 +11,24 @@ namespace NetDoc
     {
         private readonly IEnumerable<Call> m_Calls;
 
-        public Rewriter(IEnumerable<Call> mCalls)
+        public Rewriter(IEnumerable<Call> calls)
         {
-            m_Calls = mCalls;
+            m_Calls = calls;
         }
 
         internal async Task<Document> Rewrite(Document doc)
         {
             var model = await doc.GetSyntaxRootAsync();
 
-            foreach (var method in model.DescendantNodes())
-            {
-                //Debug(method);
-            }
+            //foreach (var method in model.DescendantNodes())
+            //{
+            //    Debug(method);
+            //}
 
             foreach (var method in model.DescendantNodes().Where(CanBeCallTarget))
             {
                 var containingClass = method.Ancestors().First(IsType);
-                var namespaceParts = method.Ancestors().Single(IsNamespace).DescendantNodes()
+                var namespaceParts = method.Ancestors().Single(IsNamespace).ChildNodes().First().DescendantNodes()
                     .Where(t => t.Kind() == SyntaxKind.IdentifierName).Select(Name);
                 var containingNamespace = string.Join(".", namespaceParts);
                 var isPublic = IsPublic(containingClass) && IsPublic(method);
@@ -46,7 +46,17 @@ namespace NetDoc
                         .ChildTokens().Single(n => n.Kind() == SyntaxKind.IdentifierToken).Text;
                 }
 
-                Console.WriteLine($"{method.Kind()} {containingNamespace}.{Name(containingClass)}.{name}()");
+                var containingType = Name(containingClass);
+                Console.WriteLine($"{method.Kind()} {containingNamespace}.{containingType}.{name}()");
+
+                var matchingCalls = m_Calls
+                    .Where(c => c.Namespace == containingNamespace)
+                    .Where(c => c.Type == containingType)
+                    .Where(c => c.Method == name);
+                foreach (var call in matchingCalls)
+                {
+                    Console.WriteLine("^^^ USED");
+                }
             }
 
             return doc;

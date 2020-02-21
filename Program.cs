@@ -12,6 +12,7 @@ namespace NetDoc
             const string sln = @"C:\Users\Sam.Blackburn\source\repos\NetDoc\NetDoc.sln";
 
             var calls = AssemblyAnalyser.AnalyseAssembly("netdoc.exe");
+
             var modifier = new SolutionModifier(new [] {new Rewriter(calls)}, sln);
 
             DumpErrors(modifier.ModifySolution);
