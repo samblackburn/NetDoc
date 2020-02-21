@@ -14,10 +14,16 @@ namespace NetDoc
             return referencingAssembly.Modules
                 .SelectMany(a => a.Types)
                 .SelectMany(GetAllBodies)
-                .Where(definition => definition != null)
-                .SelectMany(y => y.Body.Instructions)
-                .Where(IsCall)
-                .Select(c => new Call(c));
+                .SelectMany(GetAllCalls);
+        }
+
+        private static IEnumerable<Call> GetAllCalls(MethodDefinition definition)
+        {
+            if (definition == null) yield break;
+            foreach (var instruction in definition.Body.Instructions.Where(IsCall))
+            {
+                yield return new Call(instruction);
+            }
         }
 
         private static bool IsCall(Instruction x)
