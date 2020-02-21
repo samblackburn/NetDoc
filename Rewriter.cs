@@ -57,6 +57,9 @@ namespace NetDoc
                 if (!matchingCalls.Any())
                 {
                     Console.WriteLine("    Unused");
+
+                    var trivia = method.GetLeadingTrivia().Where(t => t.Kind() == SyntaxKind.SingleLineDocumentationCommentTrivia);
+                    Console.WriteLine(string.Join("#", trivia));
                 }
 
                 foreach (var call in matchingCalls)

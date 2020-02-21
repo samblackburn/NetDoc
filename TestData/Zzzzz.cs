@@ -19,5 +19,15 @@
         }
         private int CallerOfIndexGetter() => this[2];
         private int CallerOfIndexSetter() => this[2] = 1;
+
+        /// <summary>
+        /// blah
+        /// blah
+        /// </summary>
+        /// <returns></returns>
+        public void WithXmlDoc()
+        {
+
+        }
     }
 }
