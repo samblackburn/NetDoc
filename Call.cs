@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -17,7 +16,17 @@ namespace NetDoc
 
         public string Namespace => m_Operand.DeclaringType.Namespace;
         public string Type => m_Operand.DeclaringType.Name.Split('`')[0];
-        public string Method => m_Operand.Name;
+        public string Method => IgnorePropertyPrefix(m_Operand.Name);
+
+        private string IgnorePropertyPrefix(string name)
+        {
+            if (name.StartsWith("get_") || name.StartsWith("set_"))
+            {
+                return name.Substring(4);
+            }
+
+            return name;
+        }
 
         public override string ToString()
         {
