@@ -22,7 +22,7 @@ namespace NetDoc
             if (definition == null) yield break;
             foreach (var instruction in definition.Body.Instructions.Where(IsCall))
             {
-                yield return new Call(instruction);
+                yield return new Call(instruction, definition);
             }
         }
 

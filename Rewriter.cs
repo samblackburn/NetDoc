@@ -52,10 +52,16 @@ namespace NetDoc
                 var matchingCalls = m_Calls
                     .Where(c => c.Namespace == containingNamespace)
                     .Where(c => c.Type == containingType)
-                    .Where(c => c.Method == name);
+                    .Where(c => c.Method == name)
+                    .ToList();
+                if (!matchingCalls.Any())
+                {
+                    Console.WriteLine("    Unused");
+                }
+
                 foreach (var call in matchingCalls)
                 {
-                    Console.WriteLine("^^^ USED");
+                    Console.WriteLine($"    Called by {call.Consumer}");
                 }
             }
 

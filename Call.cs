@@ -7,16 +7,19 @@ namespace NetDoc
 {
     internal class Call
     {
+        private readonly MethodDefinition m_Consumer;
         private readonly MethodReference m_Operand;
 
-        public Call(Instruction instruction)
+        public Call(Instruction instruction, MethodDefinition consumer)
         {
+            m_Consumer = consumer;
             m_Operand = (MethodReference)instruction.Operand;
         }
 
         public string Namespace => m_Operand.DeclaringType.Namespace;
         public string Type => m_Operand.DeclaringType.Name.Split('`')[0];
         public string Method => IgnorePropertyPrefix(m_Operand.Name);
+        public string Consumer => m_Consumer.ToString();
 
         private string IgnorePropertyPrefix(string name)
         {
