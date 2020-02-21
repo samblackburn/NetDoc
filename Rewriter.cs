@@ -66,12 +66,14 @@ namespace NetDoc
                 {
                     Console.WriteLine($"    Called by {call.Consumer}");
 
-                    var newComment = SyntaxFactory.ParseLeadingTrivia($"/// Called by {call.Consumer}");
+                    var newComment = SyntaxFactory.ParseLeadingTrivia($@"
+/// Called by {call.Consumer}
+");
                     model = model.ReplaceNode(method, method.WithLeadingTrivia(newComment));
                 }
             }
 
-            return doc;
+            return doc.WithSyntaxRoot(model);
         }
 
         private static void Debug(SyntaxNode method)
