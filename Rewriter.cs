@@ -57,18 +57,14 @@ namespace NetDoc
                 if (!matchingCalls.Any())
                 {
                     Console.WriteLine("    Unused");
-
-                    var trivia = method.GetLeadingTrivia().Where(t => t.Kind() == SyntaxKind.SingleLineDocumentationCommentTrivia);
-                    // Console.WriteLine(string.Join("#", trivia));
                 }
 
                 foreach (var call in matchingCalls)
                 {
                     Console.WriteLine($"    Called by {call.Consumer}");
 
-                    var newComment = SyntaxFactory.ParseLeadingTrivia($@"
-/// Called by {call.Consumer}
-");
+                    var newComment = SyntaxFactory.ParseLeadingTrivia($@"        /// Called by {call.Consumer}
+        ");
                     model = model.ReplaceNode(method, method.WithLeadingTrivia(newComment));
                 }
             }
