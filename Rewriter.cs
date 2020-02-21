@@ -28,12 +28,13 @@ namespace NetDoc
             foreach (var method in model.DescendantNodes().Where(CanBeCallTarget))
             {
                 var containingClass = method.Ancestors().First(IsType);
-                var containingNamespace = string.Join(".", method.Ancestors().Where(IsNamespace)
-                    .Select(n => Name(n.ChildNodes().First(t => t.Kind() == SyntaxKind.IdentifierName))));
+                var namespaceParts = method.Ancestors().Single(IsNamespace).DescendantNodes()
+                    .Where(t => t.Kind() == SyntaxKind.IdentifierName).Select(Name);
+                var containingNamespace = string.Join(".", namespaceParts);
                 var isPublic = IsPublic(containingClass) && IsPublic(method);
                 if (!isPublic)
                 {
-                    //continue;
+                    continue;
                 }
 
                 var name = Name(method);
