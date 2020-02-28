@@ -19,6 +19,7 @@ namespace NetDoc
         internal async Task<Document> Rewrite(Document doc)
         {
             var model = await doc.GetSyntaxRootAsync();
+            var toReplace = new Dictionary<SyntaxNode, SyntaxNode>();
 
             //foreach (var method in model.DescendantNodes())
             //{
@@ -58,18 +59,20 @@ namespace NetDoc
                 {
                     Console.WriteLine("    Unused");
                 }
-
-                foreach (var call in matchingCalls)
+                else
                 {
-                    Console.WriteLine($"    Called by {call.Consumer}");
+                    var newComment = "        ";
+                    foreach (var call in matchingCalls)
+                    {
+                        Console.WriteLine($"    Called by {call.Consumer}");
+                        newComment += $@"/// Called by {call.Consumer}{Environment.NewLine}        ";
+                    }
 
-                    var newComment = SyntaxFactory.ParseLeadingTrivia($@"        /// Called by {call.Consumer}
-        ");
-                    model = model.ReplaceNode(method, method.WithLeadingTrivia(newComment));
+                    toReplace[method] = method.WithLeadingTrivia(SyntaxFactory.ParseLeadingTrivia(newComment));
                 }
             }
 
-            return doc.WithSyntaxRoot(model);
+            return doc.WithSyntaxRoot(model.ReplaceNodes(toReplace.Keys, (key, _) => toReplace[key]));
         }
 
         private static void Debug(SyntaxNode method)
