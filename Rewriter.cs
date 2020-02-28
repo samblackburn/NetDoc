@@ -20,6 +20,8 @@ namespace NetDoc
         {
             var model = await doc.GetSyntaxRootAsync();
             var toReplace = new Dictionary<SyntaxNode, SyntaxNode>();
+            var typesUsed = new HashSet<string>();
+            var listedCalls = new List<Call>();
 
             //foreach (var method in model.DescendantNodes())
             //{
@@ -48,7 +50,7 @@ namespace NetDoc
                 }
 
                 var containingType = Name(containingClass);
-                Console.WriteLine($"{method.Kind()} {containingNamespace}.{containingType}.{name}()");
+                //Console.WriteLine($"{method.Kind()} {containingNamespace}.{containingType}.{name}()");
 
                 var matchingCalls = m_Calls
                     .Where(c => c.Namespace == containingNamespace)
@@ -57,20 +59,39 @@ namespace NetDoc
                     .ToList();
                 if (!matchingCalls.Any())
                 {
-                    Console.WriteLine("    Unused");
+                    //Console.WriteLine("    Unused");
                 }
                 else
                 {
                     var newComment = "        ";
                     foreach (var call in matchingCalls)
                     {
-                        Console.WriteLine($"    Called by {call.Consumer}");
+                        //Console.WriteLine($"    Called by {call.Consumer}");
                         newComment += $@"/// Called by {call.Consumer}{Environment.NewLine}        ";
+                        typesUsed.Add(call.Type);
+                        listedCalls.Add(call);
                     }
 
                     toReplace[method] = method.WithLeadingTrivia(SyntaxFactory.ParseLeadingTrivia(newComment));
                 }
             }
+
+            if (!typesUsed.Any())
+            {
+                return doc;
+            }
+            Console.WriteLine("public class ZzzzzContractAssertions");
+            Console.WriteLine("{");
+            Console.Write("    public void FooUsesTheseApiPoints(");
+            Console.Write(String.Join(", ", typesUsed.Select(x => $"{x} {x}")));
+            Console.WriteLine(")");
+            Console.WriteLine("    {");
+            foreach (var call in listedCalls)
+            {
+                Console.WriteLine($"        {call.Type}.{call.Method}(); // Used by {call.Consumer}");
+            }
+            Console.WriteLine("    }");
+            Console.WriteLine("}");
 
             return doc.WithSyntaxRoot(model.ReplaceNodes(toReplace.Keys, (key, _) => toReplace[key]));
         }
