@@ -1,4 +1,6 @@
-﻿namespace NetDoc.TestData
+﻿using System.Xml;
+
+namespace NetDoc.TestData
 {
     public class Zzzzz
     {
@@ -28,6 +30,16 @@
         public void WithXmlDoc()
         {
 
+        }
+    }
+
+    public class ZzzzzContractAssertions
+    {
+        public void ConsumerXUsesAllTheseMethods(Zzzzz x)
+        {
+            x.Method(); // Foo.Bar() calls x.Method();
+            x.Property = 1; // Foo.Baz calls this setter
+            var _ = x.Property; //
         }
     }
 }
