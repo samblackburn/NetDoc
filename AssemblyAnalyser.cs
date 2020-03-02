@@ -19,7 +19,7 @@ namespace NetDoc
 
         private static IEnumerable<Call> GetAllCalls(MethodDefinition definition)
         {
-            if (definition == null) yield break;
+            if (definition?.Body == null) yield break;
             foreach (var instruction in definition.Body.Instructions.Where(IsCall))
             {
                 yield return new Call(instruction, definition);

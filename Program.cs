@@ -9,10 +9,10 @@ namespace NetDoc
     {
         static void Main()
         {
-            const string sln = @"C:\Users\Sam.Blackburn\source\repos\NetDoc\NetDoc.sln";
-
-            var calls = AssemblyAnalyser.AnalyseAssembly("netdoc.exe");
-
+            const string sln = @"C:\Work\SQLCompareEngine\SQLCompare.sln";
+            Console.WriteLine("Analysing Assembly...");
+            var calls = AssemblyAnalyser.AnalyseAssembly(@"C:\Program Files (x86)\Red Gate\SQL Dependency Tracker 3\RedGate.DependencyViewer.UI.exe").ToList();
+            Console.WriteLine("Modifying solution...");
             var modifier = new SolutionModifier(new [] {new Rewriter(calls)}, sln);
 
             DumpErrors(modifier.ModifySolution);

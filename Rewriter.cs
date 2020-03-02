@@ -30,11 +30,12 @@ namespace NetDoc
 
             foreach (var method in model.DescendantNodes().Where(CanBeCallTarget))
             {
-                var containingClass = method.Ancestors().First(IsType);
-                var namespaceParts = method.Ancestors().Single(IsNamespace).ChildNodes().First().DescendantNodes()
+                var containingClass = method.Ancestors().FirstOrDefault(IsType); // Can be null as delegates can live outside a class
+                var namespaceParts = method.Ancestors().SingleOrDefault(IsNamespace)?.ChildNodes().First().DescendantNodes()
                     .Where(t => t.Kind() == SyntaxKind.IdentifierName).Select(Name);
-                var containingNamespace = string.Join(".", namespaceParts);
-                var isPublic = IsPublic(containingClass) && IsPublic(method);
+                var containingNamespace = namespaceParts != null ? string.Join(".", namespaceParts) : "global::";
+
+                var isPublic = (IsPublic(containingClass) != false) && (IsPublic(method) != false);
                 if (!isPublic)
                 {
                     continue;
@@ -103,14 +104,14 @@ namespace NetDoc
             Console.WriteLine($"{spaces}{method.Kind()} => {string.Join(", ", tokens)}");
         }
 
-        private static bool IsPublic(SyntaxNode containingClass)
+        private static bool? IsPublic(SyntaxNode containingClass)
         {
-            return containingClass.ChildTokens().Any(t => t.Kind() == SyntaxKind.PublicKeyword);
+            return containingClass?.ChildTokens().Any(t => t.Kind() == SyntaxKind.PublicKeyword);
         }
 
         private static string Name(SyntaxNode node)
         {
-            return node.ChildTokens().SingleOrDefault(t => t.Kind() == SyntaxKind.IdentifierToken).Text;
+            return node?.ChildTokens().SingleOrDefault(t => t.Kind() == SyntaxKind.IdentifierToken).Text;
         }
 
         private static bool IsNamespace(SyntaxNode n)
