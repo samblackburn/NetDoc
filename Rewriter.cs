@@ -81,6 +81,13 @@ namespace NetDoc
             {
                 return doc;
             }
+            // CreateContractClass(typesUsed, listedCalls);
+
+            return doc.WithSyntaxRoot(model.ReplaceNodes(toReplace.Keys, (key, _) => toReplace[key]));
+        }
+
+        private static void CreateContractClass(HashSet<string> typesUsed, List<Call> listedCalls)
+        {
             Console.WriteLine("public class ZzzzzContractAssertions");
             Console.WriteLine("{");
             Console.Write("    public void FooUsesTheseApiPoints(");
@@ -91,10 +98,9 @@ namespace NetDoc
             {
                 Console.WriteLine($"        {call.Type}.{call.Method}(); // Used by {call.Consumer}");
             }
+
             Console.WriteLine("    }");
             Console.WriteLine("}");
-
-            return doc.WithSyntaxRoot(model.ReplaceNodes(toReplace.Keys, (key, _) => toReplace[key]));
         }
 
         private static void Debug(SyntaxNode method)
