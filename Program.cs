@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -11,7 +12,10 @@ namespace NetDoc
         {
             const string sln = @"C:\Work\SQLCompareEngine\SQLCompare.sln";
             Console.WriteLine("Analysing Assembly...");
-            var calls = AssemblyAnalyser.AnalyseAssembly(@"C:\Program Files (x86)\Red Gate\SQL Dependency Tracker 3\RedGate.DependencyViewer.UI.exe").ToList();
+            var nonObfuscatedBuildFolder = @"C:\Work\SQLDependencyTracker\Build\Debug\net472";
+            var assemblies = Directory.EnumerateFiles(nonObfuscatedBuildFolder, "RedGate.*.dll")
+                .Concat(Directory.EnumerateFiles(nonObfuscatedBuildFolder, "RedGate.*.exe"));
+            var calls = assemblies.SelectMany(AssemblyAnalyser.AnalyseAssembly).ToList();
             Console.WriteLine("Modifying solution...");
             var modifier = new SolutionModifier(new [] {new Rewriter(calls)}, sln);
 
