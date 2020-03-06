@@ -19,7 +19,7 @@ namespace NetDoc
         public string Namespace => m_Operand.DeclaringType.Namespace;
         public string Type => m_Operand.DeclaringType.Name.Split('`')[0];
         public string Method => IgnorePropertyPrefix(m_Operand.Name);
-        public string Consumer => m_Consumer.ToString();
+        public string Consumer => $"{m_Consumer.DeclaringType.Name}.{m_Consumer.Name}";
 
         private string IgnorePropertyPrefix(string name)
         {

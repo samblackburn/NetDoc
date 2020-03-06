@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -20,8 +22,6 @@ namespace NetDoc
         {
             var model = await doc.GetSyntaxRootAsync();
             var toReplace = new Dictionary<SyntaxNode, SyntaxNode>();
-            var typesUsed = new HashSet<string>();
-            var listedCalls = new List<Call>();
 
             //foreach (var method in model.DescendantNodes())
             //{
@@ -58,32 +58,42 @@ namespace NetDoc
                     .Where(c => c.Type == containingType)
                     .Where(c => c.Method == name)
                     .ToList();
-                if (!matchingCalls.Any())
-                {
-                    //Console.WriteLine("    Unused");
-                }
-                else
-                {
-                    var newComment = "        ";
-                    foreach (var call in matchingCalls)
-                    {
-                        //Console.WriteLine($"    Called by {call.Consumer}");
-                        newComment += $@"/// Called by {call.Consumer}{Environment.NewLine}        ";
-                        typesUsed.Add(call.Type);
-                        listedCalls.Add(call);
-                    }
 
-                    toReplace[method] = method.WithLeadingTrivia(SyntaxFactory.ParseLeadingTrivia(newComment));
+                var existingComment = method.GetLeadingTrivia();
+                var newComment = DocumentUsages(existingComment, matchingCalls);
+                if (!existingComment.Equals(newComment))
+                {
+                    toReplace[method] = method.WithLeadingTrivia(newComment);
                 }
             }
-
-            if (!typesUsed.Any())
-            {
-                return doc;
-            }
-            // CreateContractClass(typesUsed, listedCalls);
 
             return doc.WithSyntaxRoot(model.ReplaceNodes(toReplace.Keys, (key, _) => toReplace[key]));
+        }
+
+        private static readonly Regex s_IsUsage = new Regex("/// Used by ", RegexOptions.Compiled);
+
+        private SyntaxTriviaList DocumentUsages(SyntaxTriviaList existingComment, IEnumerable<Call> matchingCalls)
+        {
+            var probablyBlankLine = existingComment.FirstOrDefault(t => t.Kind() == SyntaxKind.WhitespaceTrivia).ToFullString();
+            var idiomaticWhitespace = probablyBlankLine.TrimEnd('\n').TrimEnd('\r');
+            var hasNewline = probablyBlankLine.EndsWith("\n");
+
+            var existingLines = existingComment.ToFullString().Split('\n').Select(x => x.TrimEnd('\r'));
+            var notUsages = existingLines.Where(x => !s_IsUsage.IsMatch(x)).ToList();
+
+            var newComment = new StringBuilder();
+            foreach (var call in matchingCalls)
+            {
+                newComment.AppendLine($@"{idiomaticWhitespace}/// Called by {call.Consumer}");
+            }
+
+            if (!string.IsNullOrWhiteSpace(notUsages.Last()))
+            {
+                throw new Exception("Expected last line of leading trivia to be whitespace");
+            }
+
+            var oldComment = String.Join(Environment.NewLine, notUsages.SkipLast()) + (hasNewline ? Environment.NewLine : String.Empty);
+            return SyntaxFactory.ParseLeadingTrivia($"{oldComment}{newComment}{notUsages.LastOrDefault()}");
         }
 
         private static void CreateContractClass(HashSet<string> typesUsed, List<Call> listedCalls)
