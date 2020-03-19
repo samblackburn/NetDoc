@@ -75,10 +75,17 @@ namespace NetDoc
         private SyntaxTriviaList DocumentUsages(SyntaxTriviaList existingComment, IEnumerable<Call> matchingCalls)
         {
             var probablyBlankLine = existingComment.FirstOrDefault(t => t.Kind() == SyntaxKind.WhitespaceTrivia).ToFullString();
+            var newComment = UpdateXmlComment(matchingCalls, probablyBlankLine, existingComment.ToFullString());
+            return SyntaxFactory.ParseLeadingTrivia(newComment);
+        }
+
+        private static string UpdateXmlComment(IEnumerable<Call> matchingCalls, string probablyBlankLine,
+            string existingComment)
+        {
             var idiomaticWhitespace = probablyBlankLine.TrimEnd('\n').TrimEnd('\r');
             var hasNewline = probablyBlankLine.EndsWith("\n");
 
-            var existingLines = existingComment.ToFullString().Split('\n').Select(x => x.TrimEnd('\r'));
+            var existingLines = existingComment.Split('\n').Select(x => x.TrimEnd('\r'));
             var notUsages = existingLines.Where(x => !s_IsUsage.IsMatch(x)).ToList();
 
             var newComment = new StringBuilder();
@@ -92,8 +99,9 @@ namespace NetDoc
                 throw new Exception("Expected last line of leading trivia to be whitespace");
             }
 
-            var oldComment = String.Join(Environment.NewLine, notUsages.SkipLast()) + (hasNewline ? Environment.NewLine : String.Empty);
-            return SyntaxFactory.ParseLeadingTrivia($"{oldComment}{newComment}{notUsages.LastOrDefault()}");
+            var oldComment = String.Join(Environment.NewLine, notUsages.SkipLast()) +
+                             (hasNewline ? Environment.NewLine : String.Empty);
+            return $"{oldComment}{newComment}{notUsages.LastOrDefault()}";
         }
 
         private static void CreateContractClass(HashSet<string> typesUsed, List<Call> listedCalls)
