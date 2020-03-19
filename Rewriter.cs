@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -70,39 +68,12 @@ namespace NetDoc
             return doc.WithSyntaxRoot(model.ReplaceNodes(toReplace.Keys, (key, _) => toReplace[key]));
         }
 
-        private static readonly Regex s_IsUsage = new Regex("/// Used by ", RegexOptions.Compiled);
-
         private SyntaxTriviaList DocumentUsages(SyntaxTriviaList existingComment, IEnumerable<Call> matchingCalls)
         {
             var probablyBlankLine = existingComment.FirstOrDefault(t => t.Kind() == SyntaxKind.WhitespaceTrivia).ToFullString();
             var consumers = matchingCalls.Select(c => c.Consumer);
-            var newComment = UpdateXmlComment(consumers, probablyBlankLine, existingComment.ToFullString());
+            var newComment = CommentUpdater.UpdateXmlComment(consumers, probablyBlankLine, existingComment.ToFullString());
             return SyntaxFactory.ParseLeadingTrivia(newComment);
-        }
-
-        public static string UpdateXmlComment(IEnumerable<string> consumers, string probablyBlankLine,
-            string existingComment)
-        {
-            var idiomaticWhitespace = probablyBlankLine.TrimEnd('\n').TrimEnd('\r');
-            var hasNewline = probablyBlankLine.EndsWith("\n");
-
-            var existingLines = existingComment.Split('\n').Select(x => x.TrimEnd('\r'));
-            var notUsages = existingLines.Where(x => !s_IsUsage.IsMatch(x)).ToList();
-
-            var newComment = new StringBuilder();
-            foreach (var call in consumers ?? new string[0])
-            {
-                newComment.AppendLine($@"{idiomaticWhitespace}/// Called by {call}");
-            }
-
-            if (!string.IsNullOrWhiteSpace(notUsages.Last()))
-            {
-                throw new Exception("Expected last line of leading trivia to be whitespace");
-            }
-
-            var oldComment = String.Join(Environment.NewLine, notUsages.SkipLast()) +
-                             (hasNewline ? Environment.NewLine : String.Empty);
-            return $"{oldComment}{newComment}{notUsages.LastOrDefault()}";
         }
 
         private static void CreateContractClass(HashSet<string> typesUsed, List<Call> listedCalls)
