@@ -75,11 +75,12 @@ namespace NetDoc
         private SyntaxTriviaList DocumentUsages(SyntaxTriviaList existingComment, IEnumerable<Call> matchingCalls)
         {
             var probablyBlankLine = existingComment.FirstOrDefault(t => t.Kind() == SyntaxKind.WhitespaceTrivia).ToFullString();
-            var newComment = UpdateXmlComment(matchingCalls, probablyBlankLine, existingComment.ToFullString());
+            var consumers = matchingCalls.Select(c => c.Consumer);
+            var newComment = UpdateXmlComment(consumers, probablyBlankLine, existingComment.ToFullString());
             return SyntaxFactory.ParseLeadingTrivia(newComment);
         }
 
-        private static string UpdateXmlComment(IEnumerable<Call> matchingCalls, string probablyBlankLine,
+        public static string UpdateXmlComment(IEnumerable<string> consumers, string probablyBlankLine,
             string existingComment)
         {
             var idiomaticWhitespace = probablyBlankLine.TrimEnd('\n').TrimEnd('\r');
@@ -89,9 +90,9 @@ namespace NetDoc
             var notUsages = existingLines.Where(x => !s_IsUsage.IsMatch(x)).ToList();
 
             var newComment = new StringBuilder();
-            foreach (var call in matchingCalls)
+            foreach (var call in consumers ?? new string[0])
             {
-                newComment.AppendLine($@"{idiomaticWhitespace}/// Called by {call.Consumer}");
+                newComment.AppendLine($@"{idiomaticWhitespace}/// Called by {call}");
             }
 
             if (!string.IsNullOrWhiteSpace(notUsages.Last()))
