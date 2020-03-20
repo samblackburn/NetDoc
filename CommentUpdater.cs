@@ -1,41 +1,32 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using NetDoc;
 using NUnit.Framework;
 
 internal static class CommentUpdater
 {
-    private static readonly Regex s_IsUsage = new Regex("/// Used by ", RegexOptions.Compiled);
+    private static readonly Regex s_IsUsage = new Regex(@"^[ \t]*\/\/\/ Used by .*\r\n", RegexOptions.Compiled | RegexOptions.Multiline);
 
-    [TestCase(null, "///", "", ExpectedResult = "///")]
-    [TestCase(null, "   ///\r\n", "   ", ExpectedResult = "   ///\r\n")]
-    [TestCase(null, "   ///\r\n", "   \r\n", ExpectedResult = "   ///\r\n")]
-    [TestCase(null, "   ///\r\n   ", "   ", ExpectedResult = "   ///\r\n   ")]
-    public static string UpdateXmlComment(IEnumerable<string> consumers, string probablyBlankLine,
-        string existingComment)
+    [TestCase(null, "\r\n", "", ExpectedResult = "\r\n", TestName = "Non-indented method")]
+    [TestCase(null, "\r\n    ", "    ", ExpectedResult = "\r\n    ", TestName = "Spaces before method")]
+    [TestCase(null, "\r\n    /// Blah\r\n    ", "    ", ExpectedResult = "\r\n    /// Blah\r\n    ", TestName = "Comment before method")]
+    [TestCase(null, "\r\n    /// Used by blah\r\n    ", "    ", ExpectedResult = "\r\n    ", TestName = "Obsolete usage")]
+    [TestCaseSource(nameof(TestCasesWithUsage))]
+    public static string UpdateXmlComment(IEnumerable<string> consumers, string existingComment,
+        string idiomaticWhitespace)
     {
-        var idiomaticWhitespace = probablyBlankLine.TrimEnd('\n').TrimEnd('\r');
-        var hasNewline = probablyBlankLine.EndsWith("\n");
+        string FormatUsage(string consumer) => $"/// Used by {consumer}\r\n{idiomaticWhitespace}";
+        var allConsumers = string.Join("", (consumers ?? new string[0]).Select(FormatUsage));
+        var removeOldUsages = s_IsUsage.Replace(existingComment, "");
+        return $"{removeOldUsages}{allConsumers}";
+    }
 
-        var existingLines = existingComment.Split('\n').Select(x => x.TrimEnd('\r'));
-        var notUsages = existingLines.Where(x => !s_IsUsage.IsMatch(x)).ToList();
-
-        var newComment = new StringBuilder();
-        foreach (var call in consumers ?? new string[0])
+    public static IEnumerable<TestCaseData> TestCasesWithUsage
+    {
+        get
         {
-            newComment.AppendLine($@"{idiomaticWhitespace}/// Called by {call}");
+            yield return new TestCaseData(new[] {"Foo()"}, "    \r\n    ", "    ")
+                {ExpectedResult = "    \r\n    /// Used by Foo()\r\n    ", TestName = "Indented, 1 usage"};
         }
-
-        if (!String.IsNullOrWhiteSpace(notUsages.Last()))
-        {
-            throw new Exception("Expected last line of leading trivia to be whitespace");
-        }
-
-        var oldComment = String.Join(Environment.NewLine, notUsages.SkipLast()) +
-                         (hasNewline ? Environment.NewLine : String.Empty);
-        return $"{oldComment}{newComment}{notUsages.LastOrDefault()}";
     }
 }

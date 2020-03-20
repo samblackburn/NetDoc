@@ -72,7 +72,7 @@ namespace NetDoc
         {
             var probablyBlankLine = existingComment.FirstOrDefault(t => t.Kind() == SyntaxKind.WhitespaceTrivia).ToFullString();
             var consumers = matchingCalls.Select(c => c.Consumer);
-            var newComment = CommentUpdater.UpdateXmlComment(consumers, probablyBlankLine, existingComment.ToFullString());
+            var newComment = CommentUpdater.UpdateXmlComment(consumers, existingComment.ToFullString(), probablyBlankLine);
             return SyntaxFactory.ParseLeadingTrivia(newComment);
         }
 
