@@ -57,15 +57,20 @@ namespace NetDoc
                     .Where(c => c.Method == name)
                     .ToList();
 
-                var existingComment = method.GetLeadingTrivia();
-                var newComment = DocumentUsages(existingComment, matchingCalls);
-                if (!existingComment.Equals(newComment))
-                {
-                    toReplace[method] = method.WithLeadingTrivia(newComment);
-                }
+                AddXmlComment(method, matchingCalls, toReplace);
             }
 
             return doc.WithSyntaxRoot(model.ReplaceNodes(toReplace.Keys, (key, _) => toReplace[key]));
+        }
+
+        private void AddXmlComment(SyntaxNode method, List<Call> matchingCalls, Dictionary<SyntaxNode, SyntaxNode> toReplace)
+        {
+            var existingComment = method.GetLeadingTrivia();
+            var newComment = DocumentUsages(existingComment, matchingCalls);
+            if (!existingComment.Equals(newComment))
+            {
+                toReplace[method] = method.WithLeadingTrivia(newComment);
+            }
         }
 
         private SyntaxTriviaList DocumentUsages(SyntaxTriviaList existingComment, IEnumerable<Call> matchingCalls)
