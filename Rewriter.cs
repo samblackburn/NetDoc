@@ -73,7 +73,18 @@ namespace NetDoc
             var probablyBlankLine = existingComment.FirstOrDefault(t => t.Kind() == SyntaxKind.WhitespaceTrivia).ToFullString();
             var consumers = matchingCalls.Select(c => c.Consumer);
             var newComment = CommentUpdater.UpdateXmlComment(consumers, existingComment.ToFullString(), probablyBlankLine);
-            return SyntaxFactory.ParseLeadingTrivia(newComment);
+            var newTrivia = SyntaxFactory.ParseLeadingTrivia(newComment);
+            if (newTrivia.ToFullString() != newComment)
+            {
+                if (newComment == existingComment.ToFullString())
+                {
+                    return existingComment;
+                }
+
+                throw new Exception("Failed to add XML doc");
+            }
+
+            return newTrivia;
         }
 
         private static void CreateContractClass(HashSet<string> typesUsed, List<Call> listedCalls)
