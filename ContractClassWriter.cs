@@ -1,18 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace NetDoc
 {
     internal class ContractClassWriter
     {
-        public void ProcessCalls(string consumerName, IEnumerable<Call> calls)
+        public IEnumerable<string> ProcessCalls(string consumerName, IReadOnlyCollection<Call> calls)
         {
-            Console.WriteLine($"public void UsedBy{consumerName}");
+            yield return $"private void UsedBy{consumerName}(";
+            var parameters = calls
+                .Where(c => !c.IsStatic)
+                .Where(c => !string.IsNullOrEmpty(c.Namespace))
+                .Select(c => $"        {c.TypeWithGenerics} {c.VariableName}")
+                .ToHashSet();
+            Console.WriteLine(string.Join(",\r\n", parameters));
+            Console.WriteLine("    )");
             Console.WriteLine("{");
-
+            List<int>.Enumerator foo;
             foreach (var call in calls)
             {
-                Console.WriteLine(call);
+                Console.WriteLine($"    {call.VariableName}{call.Invocation};");
             }
 
             Console.WriteLine("}");
