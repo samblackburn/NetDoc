@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace NetDoc
@@ -21,16 +20,16 @@ namespace NetDoc
                 .Concat(relevantCalls.SelectMany(c => c.ParameterTypes))
                 .Select(string.Intern)
                 .ToHashSet();
-            Console.WriteLine(string.Join(",\r\n", parameters));
-            Console.WriteLine("    )");
-            Console.WriteLine("{");
+            yield return string.Join(",\r\n", parameters);
+            yield return "    )";
+            yield return "{";
 
             foreach (var invocation in relevantCalls.Select(c => c.Invocation).ToHashSet())
             {
-                Console.WriteLine(invocation);
+                yield return invocation;
             }
 
-            Console.WriteLine("}");
+            yield return "}";
         }
     }
 }
