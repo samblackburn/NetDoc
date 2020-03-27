@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Mono.Cecil;
 
 namespace NetDoc
 {
@@ -12,21 +13,42 @@ namespace NetDoc
         static void Main()
         {
             const string sln = @"C:\Work\SQLCompareEngine\SQLCompare.sln";
+            const string referenced = @"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
             var nonObfuscatedBuildFolder = @"C:\Work\SQLDependencyTracker\Build\Debug\net472";
             //const string sln = @"C:\Users\Sam.Blackburn\source\repos\NetDoc\NetDoc.sln";
             //var nonObfuscatedBuildFolder = @"C:\Users\Sam.Blackburn\source\repos\NetDoc\bin\Debug\net472";
             var assemblies = RedgateAssembliesInFolder(nonObfuscatedBuildFolder, Path.GetDirectoryName(sln)).ToList();
             Console.WriteLine("Analysing {0} Assemblies", assemblies.Count());
-            var calls = assemblies.SelectMany(AssemblyAnalyser.AnalyseAssembly).ToList();
+            //var calls = assemblies.SelectMany(AssemblyAnalyser.AnalyseAssembly).ToList();
             Console.WriteLine("Modifying solution...");
             //var modifier = new SolutionModifier(new [] {new Rewriter(calls)}, sln);
             //DumpErrors(modifier.ModifySolution);
             var contract = new ContractClassWriter();
-            foreach (var x in contract.ProcessCalls("DependencyTracker", calls))
+
+            using var outFile = File.OpenWrite(@"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions.cs");
+            using var writer = new StreamWriter(outFile);
+            var referencedTypes = AssemblyDefinition.ReadAssembly(referenced).Modules.SelectMany(a => a.Types)
+                .Select(x => $"{x.Namespace}::{x.Name.Split('`')[0]}").ToHashSet();
+            writer.Write(@"namespace RedGate.SQLCompare.Engine.UnitTests
+{
+    class ContractAssertions
+    {
+");
+            foreach (var assembly in assemblies)
             {
-                Console.WriteLine(x);
+                var calls = AssemblyAnalyser.AnalyseAssembly(assembly)
+                    .Where(call => TargetsReferencedAssembly(call, referencedTypes)).ToList();
+                if (!calls.Any()) continue;
+                var assemblyName = Path.GetFileNameWithoutExtension(assembly).Replace(".", "");
+                foreach (var x in contract.ProcessCalls(assemblyName, calls))
+                {
+                    writer.WriteLine(x);
+                }
             }
         }
+
+        private static bool TargetsReferencedAssembly(Call arg, ICollection<string> candidateTypes) =>
+            candidateTypes.Contains($"{arg.Namespace}::{arg.Type}");
 
         private static IEnumerable<string> RedgateAssembliesInFolder(string include, string exclude)
         {
