@@ -25,7 +25,7 @@ namespace NetDoc
             //DumpErrors(modifier.ModifySolution);
             var contract = new ContractClassWriter();
 
-            using var outFile = File.OpenWrite(@"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions.cs");
+            using var outFile = File.Open(@"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions.cs", FileMode.Truncate);
             using var writer = new StreamWriter(outFile);
             var referencedTypes = AssemblyDefinition.ReadAssembly(referenced).Modules.SelectMany(a => a.Types)
                 .Select(x => $"{x.Namespace}::{x.Name.Split('`')[0]}").ToHashSet();
@@ -37,14 +37,17 @@ namespace NetDoc
             foreach (var assembly in assemblies)
             {
                 var calls = AssemblyAnalyser.AnalyseAssembly(assembly)
-                    .Where(call => TargetsReferencedAssembly(call, referencedTypes)).ToList();
-                if (!calls.Any()) continue;
+                    .Where(call => TargetsReferencedAssembly(call, referencedTypes));
                 var assemblyName = Path.GetFileNameWithoutExtension(assembly).Replace(".", "");
                 foreach (var x in contract.ProcessCalls(assemblyName, calls))
                 {
                     writer.WriteLine(x);
                 }
             }
+
+            writer.Write(@"    }
+}");
+            writer.Flush();
         }
 
         private static bool TargetsReferencedAssembly(Call arg, ICollection<string> candidateTypes) =>

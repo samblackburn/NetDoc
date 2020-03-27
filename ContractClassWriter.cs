@@ -8,11 +8,11 @@ namespace NetDoc
         public IEnumerable<string> ProcessCalls(string consumerName, IEnumerable<Call> calls)
         {
             var relevantCalls = calls
-                .Where(c => c.Method != "op_Equality")
-                .Where(c => c.Method != "op_Inequality")
+                .Where(c => !Exclusions.Contains(c.Method))
                 .ToList();
+            if (!relevantCalls.Any()) yield break;
 
-            yield return $"private void UsedBy{consumerName}<T0, T1>(";
+            yield return $"        private void UsedBy{consumerName}(";
             var parameters = relevantCalls
                 .Where(c => !c.IsStatic)
                 .Where(c => !string.IsNullOrEmpty(c.Namespace))
@@ -21,15 +21,24 @@ namespace NetDoc
                 .Select(string.Intern)
                 .ToHashSet();
             yield return string.Join(",\r\n", parameters);
-            yield return "    )";
-            yield return "{";
+            yield return "        )";
+            yield return "        {";
 
             foreach (var invocation in relevantCalls.Select(c => c.Invocation).ToHashSet())
             {
                 yield return invocation;
             }
 
-            yield return "}";
+            yield return "        }";
         }
+
+        private static readonly HashSet<string> Exclusions = new HashSet<string>
+        {
+            "op_Equality",
+            "op_Inequality",
+            "ComputeStringHash",
+            "Binding",
+            "Command",
+        };
     }
 }

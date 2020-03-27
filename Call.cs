@@ -57,17 +57,17 @@ namespace NetDoc
 
                 if (m_Operand.Name == ".ctor")
                 {
-                    return $"new {TypeWithGenerics}({parameters});";
+                    return $"            new {TypeWithGenerics}({parameters});";
                 }
 
                 if (m_Operand.Name == "get_Item")
                 {
-                    return AssignToRandomVariable(m_Operand.ReturnType, $"{VariableName}[{indexerParameters}];");
+                    return AssignToRandomVariable(m_Operand.ReturnType, $"{VariableName}[{parameters}];");
                 }
 
                 if (m_Operand.Name == "set_Item")
                 {
-                    return $"{VariableName}[{indexerParameters}] = {MakeVariableName(m_Operand.Parameters.First().ParameterType)};";
+                    return $"            {VariableName}[{indexerParameters}] = {MakeVariableName(m_Operand.Parameters.First().ParameterType)};";
                 }
 
                 if (m_Operand.Name.StartsWith("get_"))
@@ -77,16 +77,22 @@ namespace NetDoc
 
                 if (m_Operand.Name.StartsWith("set_"))
                 {
-                    return $"{VariableName}.{Method} = {MakeVariableName(m_Operand.Parameters.First().ParameterType)};";
+                    return $"            {VariableName}.{Method} = {MakeVariableName(m_Operand.Parameters.First().ParameterType)};";
                 }
 
-                return $"{VariableName}.{m_Operand.Name}({parameters});";
+                return $"            {VariableName}.{m_Operand.Name}({parameters});";
             }
         }
 
         private string AssignToRandomVariable(TypeReference returnType, string expression)
         {
-            return $"{GetTypeName(returnType)} v{Math.Abs(expression.GetHashCode() % 10000):D4} = {expression}";
+            return $"            {GetTypeNameOrVar(returnType)} v{Math.Abs(expression.GetHashCode() % 10000):D4} = {expression}";
+        }
+
+        private static string GetTypeNameOrVar(TypeReference returnType)
+        {
+            var typeName = GetTypeName(returnType);
+            return typeName.StartsWith("!") ? "var" : typeName;
         }
 
         public bool IsStatic => !m_Operand.HasThis;
@@ -97,7 +103,7 @@ namespace NetDoc
             get
             {
                 var result = m_Operand.Parameters.Select(p =>
-                    $"        {GetTypeName(p.ParameterType)} {MakeVariableName(p.ParameterType)}");
+                    $"            {GetTypeName(p.ParameterType)} {MakeVariableName(p.ParameterType)}");
                 if (result.Any(x => x.Contains("&")))
                 {
 
@@ -106,7 +112,7 @@ namespace NetDoc
             }
         }
 
-        public string TypeAsParameter => $"        {TypeWithGenerics} {MakeVariableName(m_Operand.DeclaringType)}";
+        public string TypeAsParameter => $"            {TypeWithGenerics} {MakeVariableName(m_Operand.DeclaringType)}";
 
         private string IgnorePropertyPrefix(string name)
         {
