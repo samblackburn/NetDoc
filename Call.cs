@@ -63,7 +63,12 @@ namespace NetDoc
                     return $"{ClassOrInstance}.{Method} = {CallToFactory(m_Operand.Parameters.First().ParameterType)};";
                 }
 
-                return $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
+                if (m_Operand.ReturnType.FullName == "System.Void")
+                {
+                    return $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
+                }
+
+                return AssignToRandomVariable(m_Operand, $"{ClassOrInstance}.{m_Operand.Name}({parameters})");
             }
         }
 
@@ -102,13 +107,31 @@ namespace NetDoc
             }
 
             var nameSpace = type.Namespace;
+
+            if (type.DeclaringType != null)
+            {
+                nameSpace = GetTypeName(type.DeclaringType);
+            }
+
             var className = type.Name.Split('`')[0];
+
             if (className.StartsWith("!!")) return className.Replace("!!", "T");
             var generics = type is GenericInstanceType git
                 ? $"<{String.Join(", ", git.GenericArguments.Select(GetTypeName))}>"
                 : "";
             if (!string.IsNullOrEmpty(nameSpace)) nameSpace += ".";
-            return $"{nameSpace}{className}{generics}";
+            var fullName = $"{nameSpace}{className}{generics}";
+
+            switch (fullName)
+            {
+                case "System.Void": return "void";
+                case "System.String": return "string";
+                case "System.Object": return "object";
+                case "System.Boolean": return "bool";
+                case "System.Int32": return "int";
+                case "System.Int64": return "long";
+                default: return fullName;
+            }
         }
     }
 }

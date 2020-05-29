@@ -33,10 +33,15 @@ namespace NetDoc
             using var writer = new StreamWriter(outFile);
             var referencedTypes = AssemblyDefinition.ReadAssembly(referenced).Modules.SelectMany(a => a.Types)
                 .Select(x => $"{x.Namespace}::{x.Name.Split('`')[0]}").ToHashSet();
-            writer.Write(@"class ContractAssertions
+            writer.Write(@"// ReSharper disable UnusedMember.Local
+// ReSharper disable RedundantTypeArgumentsOfMethod
+// ReSharper disable InconsistentNaming
+// ReSharper disable once CheckNamespace
+// ReSharper disable once UnusedType.Global
+internal abstract class ContractAssertions
 {
-    private T Create<T>() => default;
-    private void CheckReturnType<T>(T param) {}
+    protected abstract T Create<T>();
+    protected abstract void CheckReturnType<T>(T param);
 
 ");
             foreach (var assembly in assemblies)
