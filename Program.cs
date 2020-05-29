@@ -12,11 +12,15 @@ namespace NetDoc
     {
         static void Main()
         {
-            const string sln = @"C:\Work\SQLCompareEngine\SQLCompare.sln";
-            const string referenced = @"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
-            var nonObfuscatedBuildFolder = @"C:\Work\SQLDependencyTracker\Build\Debug\net472";
-            //const string sln = @"C:\Users\Sam.Blackburn\source\repos\NetDoc\NetDoc.sln";
-            //var nonObfuscatedBuildFolder = @"C:\Users\Sam.Blackburn\source\repos\NetDoc\bin\Debug\net472";
+            const string repoRoot = @"C:\Users\Sam\source\repos\";
+            const string sln = repoRoot + @"SQLCompareEngine\SQLCompare.sln";
+            const string referenced = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
+            const string assertionsOut = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions.cs";
+            var nonObfuscatedBuildFolder = repoRoot + @"SQLDependencyTracker\Build\Debug\net472";
+            //const string sln = repoRoot + @"NetDoc\NetDoc.sln";
+            //const string referenced = repoRoot + @"NetDoc\bin\Debug\net472\NetDoc.exe";
+            //const string assertionsOut = repoRoot + @"NetDoc\ContractAssertions.cs";
+            //var nonObfuscatedBuildFolder = repoRoot + @"NetDoc\bin\Debug\net472";
             var assemblies = RedgateAssembliesInFolder(nonObfuscatedBuildFolder, Path.GetDirectoryName(sln)).ToList();
             Console.WriteLine("Analysing {0} Assemblies", assemblies.Count());
             //var calls = assemblies.SelectMany(AssemblyAnalyser.AnalyseAssembly).ToList();
@@ -25,7 +29,7 @@ namespace NetDoc
             //DumpErrors(modifier.ModifySolution);
             var contract = new ContractClassWriter();
 
-            using var outFile = File.Open(@"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions.cs", FileMode.Truncate);
+            using var outFile = File.Open(assertionsOut, FileMode.Create);
             using var writer = new StreamWriter(outFile);
             var referencedTypes = AssemblyDefinition.ReadAssembly(referenced).Modules.SelectMany(a => a.Types)
                 .Select(x => $"{x.Namespace}::{x.Name.Split('`')[0]}").ToHashSet();
@@ -33,6 +37,8 @@ namespace NetDoc
 {
     class ContractAssertions
     {
+        private T A<T>() => default;
+
 ");
             foreach (var assembly in assemblies)
             {

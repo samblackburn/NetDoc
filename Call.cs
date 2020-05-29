@@ -21,39 +21,22 @@ namespace NetDoc
         public string Type => m_Operand.DeclaringType.Name.Split('`')[0];
         public string Method => IgnorePropertyPrefix(m_Operand.Name);
         public string Consumer => $"{m_Consumer.DeclaringType.Name}.{m_Consumer.Name}";
-        public string VariableName
+        public string ClassOrInstance
         {
             get
             {
                 if (IsStatic) return GetTypeName(m_Operand.DeclaringType);
-                return MakeVariableName(m_Operand.DeclaringType);
+                return CallToFactory(m_Operand.DeclaringType);
             }
         }
 
-        private static string MakeVariableName(TypeReference type)
-        {
-            var lowerCase = type.FullName.Substring(0, 1).ToLower() +
-                            type.FullName.Substring(1);
-            var noDots = lowerCase.Replace(".", "_").Replace("!", "_bang_");
-            var noGenerics = noDots.Replace("<", "_lt_").Replace(">", "_gt_");
-            var noSlashes = noGenerics.Replace(" / ", "_");
-            var withoutIndexer = noSlashes.Replace("[", "_array").Replace(",", "_comma_").Replace("]", "");
-            switch (withoutIndexer)
-            {
-                case "object":
-                case "string":
-                case "char":
-                    return "@" + withoutIndexer;
-                default:
-                    return withoutIndexer.Replace("`", "");
-            }
-        }
+        private static string CallToFactory(TypeReference type) => $"A<{GetTypeName(type)}>()";
 
         public string Invocation {
             get
             {
-                var parameters = string.Join(", ", m_Operand.Parameters.Select(p => p.ParameterType).Select(MakeVariableName));
-                var indexerParameters = string.Join(", ", m_Operand.Parameters.Skip(1).Select(p => p.ParameterType).Select(MakeVariableName));
+                var parameters = string.Join(", ", m_Operand.Parameters.Select(p => p.ParameterType).Select(CallToFactory));
+                var indexerParameters = string.Join(", ", m_Operand.Parameters.Skip(1).Select(p => p.ParameterType).Select(CallToFactory));
 
                 if (m_Operand.Name == ".ctor")
                 {
@@ -62,25 +45,25 @@ namespace NetDoc
 
                 if (m_Operand.Name == "get_Item")
                 {
-                    return AssignToRandomVariable(m_Operand.ReturnType, $"{VariableName}[{parameters}];");
+                    return AssignToRandomVariable(m_Operand.ReturnType, $"{ClassOrInstance}[{parameters}];");
                 }
 
                 if (m_Operand.Name == "set_Item")
                 {
-                    return $"            {VariableName}[{indexerParameters}] = {MakeVariableName(m_Operand.Parameters.First().ParameterType)};";
+                    return $"            {ClassOrInstance}[{indexerParameters}] = {CallToFactory(m_Operand.Parameters.First().ParameterType)};";
                 }
 
                 if (m_Operand.Name.StartsWith("get_"))
                 {
-                    return AssignToRandomVariable(m_Operand.ReturnType, $"{VariableName}.{Method};");
+                    return AssignToRandomVariable(m_Operand.ReturnType, $"{ClassOrInstance}.{Method};");
                 }
 
                 if (m_Operand.Name.StartsWith("set_"))
                 {
-                    return $"            {VariableName}.{Method} = {MakeVariableName(m_Operand.Parameters.First().ParameterType)};";
+                    return $"            {ClassOrInstance}.{Method} = {CallToFactory(m_Operand.Parameters.First().ParameterType)};";
                 }
 
-                return $"            {VariableName}.{m_Operand.Name}({parameters});";
+                return $"            {ClassOrInstance}.{m_Operand.Name}({parameters});";
             }
         }
 
@@ -103,7 +86,7 @@ namespace NetDoc
             get
             {
                 var result = m_Operand.Parameters.Select(p =>
-                    $"            {GetTypeName(p.ParameterType)} {MakeVariableName(p.ParameterType)}");
+                    $"            {GetTypeName(p.ParameterType)} {CallToFactory(p.ParameterType)}");
                 if (result.Any(x => x.Contains("&")))
                 {
 
@@ -111,8 +94,6 @@ namespace NetDoc
                 return result;
             }
         }
-
-        public string TypeAsParameter => $"            {TypeWithGenerics} {MakeVariableName(m_Operand.DeclaringType)}";
 
         private string IgnorePropertyPrefix(string name)
         {
@@ -131,6 +112,7 @@ namespace NetDoc
             var nameSpace = type.Namespace;
             var className = type.Name.Split('`')[0];
             if (className.StartsWith("!!")) return className.Replace("!!", "T");
+            if (className.StartsWith("!")) return "object";
             var generics = type is GenericInstanceType git
                 ? $"<{String.Join(", ", git.GenericArguments.Select(x => GetTypeName(x)))}>"
                 : "";
