@@ -37,8 +37,8 @@ namespace NetDoc
 {
     class ContractAssertions
     {
-        private T A<T>() => default;
-        private void B<T>(T param) {}
+        private T Create<T>() => default;
+        private void CheckReturnType<T>(T param) {}
 
 ");
             foreach (var assembly in assemblies)

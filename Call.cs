@@ -30,7 +30,7 @@ namespace NetDoc
             }
         }
 
-        private string CallToFactory(TypeReference type) => $"A<{GetTypeName(type)}>()";
+        private string CallToFactory(TypeReference type) => $"Create<{GetTypeName(type)}>()";
 
         public string Invocation {
             get
@@ -76,7 +76,7 @@ namespace NetDoc
         {
             TypeReference genericArgument = null;
 
-            return $"            B<{GetTypeName(genericArgument ?? method.ReturnType)}>({expression});";
+            return $"            CheckReturnType<{GetTypeName(genericArgument ?? method.ReturnType)}>({expression});";
         }
 
         public bool IsStatic => !m_Operand.HasThis;
@@ -101,6 +101,11 @@ namespace NetDoc
                 var genericParamNumber = int.Parse(type.Name.TrimStart('!'));
                 var declaringType = (GenericInstanceType)m_Operand.DeclaringType;
                 type = declaringType.GenericArguments[genericParamNumber];
+            }
+
+            if (type is GenericParameter ofT)
+            {
+                return GetTypeName(ofT.Constraints.Select(c => c.ConstraintType).FirstOrDefault()) ?? "object";
             }
 
             var nameSpace = type.Namespace;
