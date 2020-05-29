@@ -40,7 +40,7 @@ namespace NetDoc
 
                 if (m_Operand.Name == ".ctor")
                 {
-                    return $"            new {TypeWithGenerics}({parameters});";
+                    return $"new {TypeWithGenerics}({parameters});";
                 }
 
                 if (m_Operand.Name == "get_Item")
@@ -50,7 +50,7 @@ namespace NetDoc
 
                 if (m_Operand.Name == "set_Item")
                 {
-                    return $"            {ClassOrInstance}[{indexerParameters}] = {CallToFactory(m_Operand.Parameters.First().ParameterType)};";
+                    return $"{ClassOrInstance}[{indexerParameters}] = {CallToFactory(m_Operand.Parameters.First().ParameterType)};";
                 }
 
                 if (m_Operand.Name.StartsWith("get_"))
@@ -60,10 +60,10 @@ namespace NetDoc
 
                 if (m_Operand.Name.StartsWith("set_"))
                 {
-                    return $"            {ClassOrInstance}.{Method} = {CallToFactory(m_Operand.Parameters.First().ParameterType)};";
+                    return $"{ClassOrInstance}.{Method} = {CallToFactory(m_Operand.Parameters.First().ParameterType)};";
                 }
 
-                return $"            {ClassOrInstance}.{m_Operand.Name}({parameters});";
+                return $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
             }
         }
 
@@ -76,7 +76,7 @@ namespace NetDoc
         {
             TypeReference genericArgument = null;
 
-            return $"            CheckReturnType<{GetTypeName(genericArgument ?? method.ReturnType)}>({expression});";
+            return $"CheckReturnType<{GetTypeName(genericArgument ?? method.ReturnType)}>({expression});";
         }
 
         public bool IsStatic => !m_Operand.HasThis;

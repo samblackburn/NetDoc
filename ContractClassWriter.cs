@@ -12,15 +12,15 @@ namespace NetDoc
                 .ToList();
             if (!relevantCalls.Any()) yield break;
 
-            yield return $"        private void UsedBy{consumerName}()";
-            yield return @"        {";
+            yield return $"private void UsedBy{consumerName}()";
+            yield return @"{";
 
             foreach (var invocation in relevantCalls.Select(c => c.Invocation).ToHashSet())
             {
-                yield return invocation;
+                yield return $"    {invocation}";
             }
 
-            yield return @"        }";
+            yield return @"}";
         }
 
         private static readonly HashSet<string> Exclusions = new HashSet<string>

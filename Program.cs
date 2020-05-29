@@ -33,12 +33,10 @@ namespace NetDoc
             using var writer = new StreamWriter(outFile);
             var referencedTypes = AssemblyDefinition.ReadAssembly(referenced).Modules.SelectMany(a => a.Types)
                 .Select(x => $"{x.Namespace}::{x.Name.Split('`')[0]}").ToHashSet();
-            writer.Write(@"namespace RedGate.SQLCompare.Engine.UnitTests
+            writer.Write(@"class ContractAssertions
 {
-    class ContractAssertions
-    {
-        private T Create<T>() => default;
-        private void CheckReturnType<T>(T param) {}
+    private T Create<T>() => default;
+    private void CheckReturnType<T>(T param) {}
 
 ");
             foreach (var assembly in assemblies)
@@ -48,12 +46,11 @@ namespace NetDoc
                 var assemblyName = Path.GetFileNameWithoutExtension(assembly).Replace(".", "");
                 foreach (var x in contract.ProcessCalls(assemblyName, calls))
                 {
-                    writer.WriteLine(x);
+                    writer.WriteLine($"    {x}");
                 }
             }
 
-            writer.Write(@"    }
-}");
+            writer.Write(@"}");
             writer.Flush();
         }
 
