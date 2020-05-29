@@ -29,8 +29,8 @@ namespace NetDoc
                 return CallToFactory(m_Operand.DeclaringType);
             }
         }
-
-        private string CallToFactory(TypeReference type) => $"Create<{GetTypeName(type)}>()";
+        public bool IsStatic => !m_Operand.HasThis;
+        public string TypeWithGenerics => GetTypeName(m_Operand.DeclaringType);
 
         public string Invocation {
             get
@@ -67,20 +67,15 @@ namespace NetDoc
             }
         }
 
-        private IEnumerable<string> Parameters(IEnumerable<ParameterDefinition> parameterDefinitions)
-        {
-            return parameterDefinitions.Select(param => CallToFactory(param.ParameterType));
-        }
+        public override string ToString() => $"{TypeWithGenerics}{Invocation}";
 
-        private string AssignToRandomVariable(MethodReference method, string expression)
-        {
-            TypeReference genericArgument = null;
+        private string CallToFactory(TypeReference type) => $"Create<{GetTypeName(type)}>()";
 
-            return $"CheckReturnType<{GetTypeName(genericArgument ?? method.ReturnType)}>({expression});";
-        }
+        private IEnumerable<string> Parameters(IEnumerable<ParameterDefinition> parameterDefinitions) =>
+            parameterDefinitions.Select(param => CallToFactory(param.ParameterType));
 
-        public bool IsStatic => !m_Operand.HasThis;
-        public string TypeWithGenerics => GetTypeName(m_Operand.DeclaringType);
+        private string AssignToRandomVariable(MethodReference method, string expression) =>
+            $"CheckReturnType<{GetTypeName(method.ReturnType)}>({expression});";
 
         private string IgnorePropertyPrefix(string name)
         {
@@ -91,8 +86,6 @@ namespace NetDoc
 
             return name;
         }
-
-        public override string ToString() => $"{TypeWithGenerics}{Invocation}";
 
         private string GetTypeName(TypeReference type)
         {
