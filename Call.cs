@@ -30,13 +30,13 @@ namespace NetDoc
             }
         }
 
-        private static string CallToFactory(TypeReference type) => $"A<{GetTypeName(type)}>()";
+        private string CallToFactory(TypeReference type) => $"A<{GetTypeName(type)}>()";
 
         public string Invocation {
             get
             {
-                var parameters = string.Join(", ", m_Operand.Parameters.Select(p => p.ParameterType).Select(CallToFactory));
-                var indexerParameters = string.Join(", ", m_Operand.Parameters.Skip(1).Select(p => p.ParameterType).Select(CallToFactory));
+                var parameters = string.Join(", ", Parameters(m_Operand.Parameters));
+                var indexerParameters = string.Join(", ", Parameters(m_Operand.Parameters.Skip(1)));
 
                 if (m_Operand.Name == ".ctor")
                 {
@@ -45,7 +45,7 @@ namespace NetDoc
 
                 if (m_Operand.Name == "get_Item")
                 {
-                    return AssignToRandomVariable(m_Operand.ReturnType, $"{ClassOrInstance}[{parameters}];");
+                    return AssignToRandomVariable(m_Operand,$"{ClassOrInstance}[{parameters}]");
                 }
 
                 if (m_Operand.Name == "set_Item")
@@ -55,7 +55,7 @@ namespace NetDoc
 
                 if (m_Operand.Name.StartsWith("get_"))
                 {
-                    return AssignToRandomVariable(m_Operand.ReturnType, $"{ClassOrInstance}.{Method};");
+                    return AssignToRandomVariable(m_Operand, $"{ClassOrInstance}.{Method}");
                 }
 
                 if (m_Operand.Name.StartsWith("set_"))
@@ -67,33 +67,20 @@ namespace NetDoc
             }
         }
 
-        private string AssignToRandomVariable(TypeReference returnType, string expression)
+        private IEnumerable<string> Parameters(IEnumerable<ParameterDefinition> parameterDefinitions)
         {
-            return $"            {GetTypeNameOrVar(returnType)} v{Math.Abs(expression.GetHashCode() % 10000):D4} = {expression}";
+            return parameterDefinitions.Select(param => CallToFactory(param.ParameterType));
         }
 
-        private static string GetTypeNameOrVar(TypeReference returnType)
+        private string AssignToRandomVariable(MethodReference method, string expression)
         {
-            var typeName = GetTypeName(returnType);
-            return typeName.StartsWith("!") ? "var" : typeName;
+            TypeReference genericArgument = null;
+
+            return $"            B<{GetTypeName(genericArgument ?? method.ReturnType)}>({expression});";
         }
 
         public bool IsStatic => !m_Operand.HasThis;
         public string TypeWithGenerics => GetTypeName(m_Operand.DeclaringType);
-
-        public IEnumerable<string> ParameterTypes
-        {
-            get
-            {
-                var result = m_Operand.Parameters.Select(p =>
-                    $"            {GetTypeName(p.ParameterType)} {CallToFactory(p.ParameterType)}");
-                if (result.Any(x => x.Contains("&")))
-                {
-
-                }
-                return result;
-            }
-        }
 
         private string IgnorePropertyPrefix(string name)
         {
@@ -107,14 +94,20 @@ namespace NetDoc
 
         public override string ToString() => $"{TypeWithGenerics}{Invocation}";
 
-        private static string GetTypeName(TypeReference type)
+        private string GetTypeName(TypeReference type)
         {
+            if (type.Name.StartsWith("!"))
+            {
+                var genericParamNumber = int.Parse(type.Name.TrimStart('!'));
+                var declaringType = (GenericInstanceType)m_Operand.DeclaringType;
+                type = declaringType.GenericArguments[genericParamNumber];
+            }
+
             var nameSpace = type.Namespace;
             var className = type.Name.Split('`')[0];
             if (className.StartsWith("!!")) return className.Replace("!!", "T");
-            if (className.StartsWith("!")) return "object";
             var generics = type is GenericInstanceType git
-                ? $"<{String.Join(", ", git.GenericArguments.Select(x => GetTypeName(x)))}>"
+                ? $"<{String.Join(", ", git.GenericArguments.Select(GetTypeName))}>"
                 : "";
             if (!string.IsNullOrEmpty(nameSpace)) nameSpace += ".";
             return $"{nameSpace}{className}{generics}";

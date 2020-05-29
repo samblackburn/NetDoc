@@ -16,7 +16,7 @@ namespace NetDoc
             const string sln = repoRoot + @"SQLCompareEngine\SQLCompare.sln";
             const string referenced = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
             const string assertionsOut = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions.cs";
-            var nonObfuscatedBuildFolder = repoRoot + @"SQLDependencyTracker\Build\Debug\net472";
+            var nonObfuscatedBuildFolder = repoRoot + @"SQLCompareEngine\UI\SqlServerGUI\Schema\SchemaGUI\bin\Debug\net472";
             //const string sln = repoRoot + @"NetDoc\NetDoc.sln";
             //const string referenced = repoRoot + @"NetDoc\bin\Debug\net472\NetDoc.exe";
             //const string assertionsOut = repoRoot + @"NetDoc\ContractAssertions.cs";
@@ -38,6 +38,7 @@ namespace NetDoc
     class ContractAssertions
     {
         private T A<T>() => default;
+        private void B<T>(T param) {}
 
 ");
             foreach (var assembly in assemblies)
