@@ -28,7 +28,10 @@ namespace NetDoc
 
         private static bool IsCall(Instruction x)
         {
-            return x.OpCode == OpCodes.Call || x.OpCode == OpCodes.Callvirt || x.OpCode == OpCodes.Calli;
+            return x.OpCode == OpCodes.Call ||
+                   x.OpCode == OpCodes.Callvirt ||
+                   x.OpCode == OpCodes.Calli ||
+                   x.OpCode == OpCodes.Newobj;
         }
 
         private static IEnumerable<MethodDefinition> GetAllBodies(TypeDefinition type)
