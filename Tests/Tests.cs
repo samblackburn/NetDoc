@@ -119,7 +119,8 @@ namespace NetDoc.Tests
             Program.CreateContractAssertions(writer, dlls[0], new[] {dlls[1]});
             Console.WriteLine(writer.ToString());
             ClrAssemblyCompiler.CompileDlls(writer.ToString(), referenced);
-            StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString());
+            StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString(),
+                "We should have created a method to contain the assertions for this assembly");
         }
 
         [TestCase("int x;", "Class2", null, ExpectedResult = "public class Class2 {int x;}")]

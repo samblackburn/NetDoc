@@ -9,14 +9,27 @@ namespace NetDoc
     internal class Call
     {
         private readonly MethodDefinition m_Consumer;
-        private readonly MethodReference m_Operand;
+        private readonly MemberReference m_Operand;
 
         public Call(Instruction instruction, MethodDefinition consumer)
         {
             m_Consumer = consumer;
-            m_Operand = (MethodReference)instruction.Operand;
+            m_Operand = instruction.Operand as MemberReference;
+            if (instruction.OpCode == OpCodes.Ldfld)
+            {
+                IsStatic = false;
+            }
+            else if (instruction.OpCode == OpCodes.Ldsfld)
+            {
+                IsStatic = true;
+            }
+            else
+            {
+                IsStatic = !MethodReference.HasThis;
+            }
         }
 
+        public bool IsStatic { get; }
         public string Namespace => m_Operand.DeclaringType.Namespace;
         public string Type => m_Operand.DeclaringType.Name.Split('`')[0];
         public string Method => IgnorePropertyPrefix(m_Operand.Name);
@@ -29,14 +42,18 @@ namespace NetDoc
                 return CallToFactory(m_Operand.DeclaringType);
             }
         }
-        public bool IsStatic => !m_Operand.HasThis;
         public string TypeWithGenerics => GetTypeName(m_Operand.DeclaringType);
 
         public string Invocation {
             get
             {
-                var parameters = string.Join(", ", Parameters(m_Operand.Parameters));
-                var indexerParameters = string.Join(", ", Parameters(m_Operand.Parameters.SkipLast()));
+                if (FieldReference != null)
+                {
+                    return AssignToRandomVariable(FieldReference.FieldType, $"{ClassOrInstance}.{FieldReference.Name}");
+                }
+
+                var parameters = string.Join(", ", Parameters(MethodReference.Parameters));
+                var indexerParameters = string.Join(", ", Parameters(MethodReference.Parameters.SkipLast()));
 
                 if (m_Operand.Name == ".ctor")
                 {
@@ -45,42 +62,45 @@ namespace NetDoc
 
                 if (m_Operand.Name == "get_Item")
                 {
-                    return AssignToRandomVariable(m_Operand,$"{ClassOrInstance}[{parameters}]");
+                    return AssignToRandomVariable(MethodReference.ReturnType,$"{ClassOrInstance}[{parameters}]");
                 }
 
                 if (m_Operand.Name == "set_Item")
                 {
-                    return $"{ClassOrInstance}[{indexerParameters}] = {CallToFactory(m_Operand.Parameters.Last().ParameterType)};";
+                    return $"{ClassOrInstance}[{indexerParameters}] = {CallToFactory(MethodReference.Parameters.Last().ParameterType)};";
                 }
 
                 if (m_Operand.Name.StartsWith("get_"))
                 {
-                    return AssignToRandomVariable(m_Operand, $"{ClassOrInstance}.{Method}");
+                    return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}.{Method}");
                 }
 
                 if (m_Operand.Name.StartsWith("set_"))
                 {
-                    return $"{ClassOrInstance}.{Method} = {CallToFactory(m_Operand.Parameters.First().ParameterType)};";
+                    return $"{ClassOrInstance}.{Method} = {CallToFactory(MethodReference.Parameters.First().ParameterType)};";
                 }
 
-                if (m_Operand.ReturnType.FullName == "System.Void")
+                if (MethodReference.ReturnType.FullName == "System.Void")
                 {
                     return $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
                 }
 
-                return AssignToRandomVariable(m_Operand, $"{ClassOrInstance}.{m_Operand.Name}({parameters})");
+                return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}.{m_Operand.Name}({parameters})");
             }
         }
 
         public override string ToString() => $"{TypeWithGenerics}{Invocation}";
+
+        private MethodReference MethodReference => m_Operand as MethodReference;
+        private FieldReference FieldReference => m_Operand as FieldReference;
 
         private string CallToFactory(TypeReference type) => $"Create<{GetTypeName(type)}>()";
 
         private IEnumerable<string> Parameters(IEnumerable<ParameterDefinition> parameterDefinitions) =>
             parameterDefinitions.Select(param => CallToFactory(param.ParameterType));
 
-        private string AssignToRandomVariable(MethodReference method, string expression) =>
-            $"CheckReturnType<{GetTypeName(method.ReturnType)}>({expression});";
+        private string AssignToRandomVariable(TypeReference returnType, string expression) =>
+            $"CheckReturnType<{GetTypeName(returnType)}>({expression});";
 
         private string IgnorePropertyPrefix(string name)
         {
