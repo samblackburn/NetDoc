@@ -21,10 +21,16 @@ namespace NetDoc
         private static IEnumerable<Call> GetAllCalls(MethodDefinition definition)
         {
             if (definition?.Body == null) yield break;
-            foreach (var instruction in definition.Body.Instructions.Where(IsCall))
+            foreach (var instruction in definition.Body.Instructions.Where(IsCall).Where(x => !IsBaseClass(x, definition)))
             {
                 yield return new Call(instruction, definition);
             }
+        }
+
+        private static bool IsBaseClass(Instruction instruction, MethodDefinition definition)
+        {
+            var type = definition.DeclaringType.BaseType;
+            return type?.FullName == ((MemberReference) instruction.Operand).DeclaringType.FullName;
         }
 
         private static bool IsCall(Instruction x)
