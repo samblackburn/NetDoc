@@ -32,7 +32,8 @@ namespace NetDoc
         public static void CreateContractAssertions(TextWriter writer, string referenced, IEnumerable<string> assemblies)
         {
             var contract = new ContractClassWriter();
-            var referencedTypes = AssemblyDefinition.ReadAssembly(referenced).Modules.SelectMany(a => a.Types)
+            using var assemblyDefinition = AssemblyDefinition.ReadAssembly(referenced);
+            var referencedTypes = assemblyDefinition.Modules.SelectMany(a => a.Types)
                 .Select(x => $"{x.Namespace}::{x.Name.Split('`')[0]}").ToHashSet();
             writer.Write(@"// ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantTypeArgumentsOfMethod

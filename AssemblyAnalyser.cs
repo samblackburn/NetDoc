@@ -9,12 +9,13 @@ namespace NetDoc
     {
         internal static IEnumerable<Call> AnalyseAssembly(string path)
         {
-            var referencingAssembly = AssemblyDefinition.ReadAssembly(path);
+            using var referencingAssembly = AssemblyDefinition.ReadAssembly(path);
 
             return referencingAssembly.Modules
                 .SelectMany(a => a.Types)
                 .SelectMany(GetAllBodies)
-                .SelectMany(GetAllCalls);
+                .SelectMany(GetAllCalls)
+                .ToList();
         }
 
         private static IEnumerable<Call> GetAllCalls(MethodDefinition definition)

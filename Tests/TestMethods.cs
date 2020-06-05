@@ -5,7 +5,7 @@ using RedGate.SQLCompare.Engine.TestUtils;
 
 namespace NetDoc.Tests
 {
-    class TestMethods
+    abstract class TestMethods
     {
         protected static void ContractAssertionShouldCompile(string referencing, string referenced)
         {
@@ -25,6 +25,12 @@ namespace NetDoc.Tests
             return string.IsNullOrEmpty(ns)
                 ? $"public class {className} {{{contents}}}"
                 : $"namespace {ns} {{{Class(contents, className, null)}}}";
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            TempDir.CleanUp();
         }
     }
 }
