@@ -12,7 +12,7 @@ namespace NetDoc.Tests
         public void Constructor()
         {
             var referenced = Class("public ReferencedClass(int i) {}", "ReferencedClass");
-            var referencing = Class("public void Bar() { var _ = new ReferencedClass(3); }", "ReferencingClass");
+            var referencing = Class("public ReferencedClass Bar() { return new ReferencedClass(3); }", "ReferencingClass");
             ContractAssertionShouldCompile(referencing, referenced);
         }
 
@@ -119,6 +119,7 @@ namespace NetDoc.Tests
             Program.CreateContractAssertions(writer, dlls[0], new[] {dlls[1]});
             Console.WriteLine(writer.ToString());
             ClrAssemblyCompiler.CompileDlls(writer.ToString(), referenced);
+            StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString());
         }
 
         [TestCase("int x;", "Class2", null, ExpectedResult = "public class Class2 {int x;}")]
