@@ -23,6 +23,11 @@ namespace NetDoc
             Console.WriteLine("Modifying solution...");
             //var modifier = new SolutionModifier(new [] {new Rewriter(calls)}, sln);
             //DumpErrors(modifier.ModifySolution);
+            CreateContractAssertions(assertionsOut, referenced, assemblies);
+        }
+
+        public static void CreateContractAssertions(string assertionsOut, string referenced, IEnumerable<string> assemblies)
+        {
             var contract = new ContractClassWriter();
 
             using var outFile = File.Open(assertionsOut, FileMode.Create);
