@@ -36,7 +36,7 @@ namespace NetDoc
             get
             {
                 var parameters = string.Join(", ", Parameters(m_Operand.Parameters));
-                var indexerParameters = string.Join(", ", Parameters(m_Operand.Parameters.Skip(1)));
+                var indexerParameters = string.Join(", ", Parameters(m_Operand.Parameters.SkipLast()));
 
                 if (m_Operand.Name == ".ctor")
                 {
@@ -50,7 +50,7 @@ namespace NetDoc
 
                 if (m_Operand.Name == "set_Item")
                 {
-                    return $"{ClassOrInstance}[{indexerParameters}] = {CallToFactory(m_Operand.Parameters.First().ParameterType)};";
+                    return $"{ClassOrInstance}[{indexerParameters}] = {CallToFactory(m_Operand.Parameters.Last().ParameterType)};";
                 }
 
                 if (m_Operand.Name.StartsWith("get_"))
