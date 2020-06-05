@@ -17,10 +17,6 @@ namespace NetDoc
             const string referenced = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
             const string assertionsOut = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions.cs";
             var nonObfuscatedBuildFolder = repoRoot + @"SQLCompareEngine\UI\SqlServerGUI\Schema\SchemaGUI\bin\Debug\net472";
-            //const string sln = repoRoot + @"NetDoc\NetDoc.sln";
-            //const string referenced = repoRoot + @"NetDoc\bin\Debug\net472\NetDoc.exe";
-            //const string assertionsOut = repoRoot + @"NetDoc\ContractAssertions.cs";
-            //var nonObfuscatedBuildFolder = repoRoot + @"NetDoc\bin\Debug\net472";
             var assemblies = RedgateAssembliesInFolder(nonObfuscatedBuildFolder, Path.GetDirectoryName(sln)).ToList();
             Console.WriteLine("Analysing {0} Assemblies", assemblies.Count());
             //var calls = assemblies.SelectMany(AssemblyAnalyser.AnalyseAssembly).ToList();
