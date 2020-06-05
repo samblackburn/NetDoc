@@ -14,10 +14,18 @@ namespace NetDoc.Tests
         }
 
         [Test]
-        public void Field()
+        public void FieldGetter()
         {
             var referenced = Class("public int Foo;", "ReferencedClass");
             var referencing = Class("public int Bar(ReferencedClass x) {return x.Foo;}", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
+        public void FieldSetter()
+        {
+            var referenced = Class("public int Foo;", "ReferencedClass");
+            var referencing = Class("public void Bar(ReferencedClass x) {x.Foo = 3;}", "ReferencingClass");
             ContractAssertionShouldCompile(referencing, referenced);
         }
 

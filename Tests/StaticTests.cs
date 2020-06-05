@@ -6,10 +6,18 @@ namespace NetDoc.Tests
     class StaticTests : TestMethods
     {
         [Test]
-        public void StaticField()
+        public void StaticFieldGetter()
         {
             var referenced = Class("public static int Foo;", "ReferencedClass");
             var referencing = Class("public static int Bar() {return ReferencedClass.Foo;}", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
+        public void StaticFieldSetter()
+        {
+            var referenced = Class("public static int Foo;", "ReferencedClass");
+            var referencing = Class("public static void Bar() {ReferencedClass.Foo = 3;}", "ReferencingClass");
             ContractAssertionShouldCompile(referencing, referenced);
         }
 

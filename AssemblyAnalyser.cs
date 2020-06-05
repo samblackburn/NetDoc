@@ -34,7 +34,9 @@ namespace NetDoc
                    x.OpCode == OpCodes.Calli ||
                    x.OpCode == OpCodes.Newobj ||
                    x.OpCode == OpCodes.Ldfld ||
-                   x.OpCode == OpCodes.Ldsfld;
+                   x.OpCode == OpCodes.Ldsfld ||
+                   x.OpCode == OpCodes.Stfld ||
+                   x.OpCode == OpCodes.Stsfld;
         }
 
         private static IEnumerable<MethodDefinition> GetAllBodies(TypeDefinition type)

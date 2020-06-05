@@ -15,11 +15,11 @@ namespace NetDoc
         {
             m_Consumer = consumer;
             m_Operand = instruction.Operand as MemberReference;
-            if (instruction.OpCode == OpCodes.Ldfld)
+            if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Stfld)
             {
                 IsStatic = false;
             }
-            else if (instruction.OpCode == OpCodes.Ldsfld)
+            else if (instruction.OpCode == OpCodes.Ldsfld || instruction.OpCode == OpCodes.Stsfld)
             {
                 IsStatic = true;
             }
