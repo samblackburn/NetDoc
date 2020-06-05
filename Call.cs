@@ -68,7 +68,7 @@ namespace NetDoc
 
                 if (m_Operand.Name == ".ctor")
                 {
-                    return $"new {TypeWithGenerics}({parameters});";
+                    return AssignToRandomVariable(MethodReference.DeclaringType, $"new {TypeWithGenerics}({parameters})");
                 }
 
                 if (m_Operand.Name == "get_Item")
@@ -108,7 +108,16 @@ namespace NetDoc
         private string CallToFactory(TypeReference type) => $"Create<{GetTypeName(type)}>()";
 
         private IEnumerable<string> Parameters(IEnumerable<ParameterDefinition> parameterDefinitions) =>
-            parameterDefinitions.Select(param => CallToFactory(param.ParameterType));
+            parameterDefinitions.Select(SyntaxForParameter);
+
+        private string SyntaxForParameter(ParameterDefinition param)
+        {
+            if (param.ParameterType.IsByReference)
+            {
+                return "out _";
+            }
+            return CallToFactory(param.ParameterType);
+        }
 
         private string AssignToRandomVariable(TypeReference returnType, string expression) =>
             $"CheckReturnType<{GetTypeName(returnType)}>({expression});";
