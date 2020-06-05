@@ -96,8 +96,18 @@ namespace NetDoc
                     return $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
                 }
 
-                return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}.{m_Operand.Name}({parameters})");
+                return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}.{m_Operand.Name}{GenericParams()}({parameters})");
             }
+        }
+
+        private string GenericParams()
+        {
+            if (MethodReference is GenericInstanceMethod gim)
+            {
+                return "<" + String.Join(",", gim.GenericArguments.Select(GetTypeName)) + ">";
+            }
+
+            return "";
         }
 
         public override string ToString() => $"{TypeWithGenerics}{Invocation}";
@@ -134,10 +144,12 @@ namespace NetDoc
 
         private string GetTypeName(TypeReference type)
         {
+            var className = type.Name.Split('`')[0];
+
             if (type.Name.StartsWith("!"))
             {
                 var genericParamNumber = int.Parse(type.Name.TrimStart('!'));
-                var declaringType = (GenericInstanceType)m_Operand.DeclaringType;
+                if (!(m_Operand.DeclaringType is GenericInstanceType declaringType)) return "object";
                 type = declaringType.GenericArguments[genericParamNumber];
             }
 
@@ -153,9 +165,6 @@ namespace NetDoc
                 nameSpace = GetTypeName(type.DeclaringType);
             }
 
-            var className = type.Name.Split('`')[0];
-
-            if (className.StartsWith("!!")) return className.Replace("!!", "T");
             var generics = type is GenericInstanceType git
                 ? $"<{String.Join(", ", git.GenericArguments.Select(GetTypeName))}>"
                 : "";
