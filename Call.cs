@@ -42,6 +42,17 @@ namespace NetDoc
                 return CallToFactory(m_Operand.DeclaringType);
             }
         }
+
+        public string ContainingTypeName
+        {
+            get
+            {
+                var topLevelType = m_Operand.DeclaringType;
+                while (topLevelType.DeclaringType != null) topLevelType = topLevelType.DeclaringType;
+                return $"{topLevelType.Namespace}::{topLevelType.Name}";
+            }
+        }
+
         public string TypeWithGenerics => GetTypeName(m_Operand.DeclaringType);
 
         public string Invocation {

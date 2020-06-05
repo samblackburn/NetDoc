@@ -61,7 +61,7 @@ internal abstract class ContractAssertions
         }
 
         private static bool TargetsReferencedAssembly(Call arg, ICollection<string> candidateTypes) =>
-            candidateTypes.Contains($"{arg.Namespace}::{arg.Type}");
+            candidateTypes.Contains(arg.ContainingTypeName);
 
         private static IEnumerable<string> RedgateAssembliesInFolder(string include, string exclude)
         {
