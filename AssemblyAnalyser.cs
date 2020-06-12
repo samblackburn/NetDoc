@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -9,13 +10,21 @@ namespace NetDoc
     {
         internal static IEnumerable<Call> AnalyseAssembly(string path)
         {
-            using var referencingAssembly = AssemblyDefinition.ReadAssembly(path);
+            try
+            {
+                using var referencingAssembly = AssemblyDefinition.ReadAssembly(path);
 
-            return referencingAssembly.Modules
-                .SelectMany(a => a.Types)
-                .SelectMany(GetAllBodies)
-                .SelectMany(GetAllCalls)
-                .ToList();
+                return referencingAssembly.Modules
+                    .SelectMany(a => a.Types)
+                    .SelectMany(GetAllBodies)
+                    .SelectMany(GetAllCalls)
+                    .ToList();
+            }
+            catch (BadImageFormatException ex)
+            {
+                Console.WriteLine($"{ex.Message}: {path}");
+                return new Call[0];
+            }
         }
 
         private static IEnumerable<Call> GetAllCalls(MethodDefinition definition)
