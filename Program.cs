@@ -12,7 +12,7 @@ namespace NetDoc
     {
         static void Main()
         {
-            const string repoRoot = @"C:\Users\Sam\source\repos\";
+            const string repoRoot = @"C:\Work\";
             const string referenced = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
             var repos = new[] {"SQLDoc", "SQLDataGenerator", "SQLTest", "SQLPrompt", "SQLSourceControl"};
 
@@ -25,9 +25,10 @@ namespace NetDoc
                 Console.WriteLine("Modifying solution...");
 
                 var assertionsOut = Path.Combine(repoRoot, @"SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions\", $"{repoName}.cs");
+                Directory.CreateDirectory(Path.GetDirectoryName(assertionsOut));
                 using var outFile = File.Open(assertionsOut, FileMode.Create);
                 using var writer = new StreamWriter(outFile);
-                CreateContractAssertions(writer, referenced, assemblies);
+                CreateContractAssertions(writer, repoName, referenced, assemblies);
             }
         }
 
