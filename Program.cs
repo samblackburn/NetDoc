@@ -13,16 +13,13 @@ namespace NetDoc
         static void Main()
         {
             const string repoRoot = @"C:\Users\Sam\source\repos\";
-            const string sln = repoRoot + @"SQLCompareEngine\SQLCompare.sln";
             const string referenced = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
             const string assertionsOut = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions.cs";
-            var nonObfuscatedBuildFolder = repoRoot + @"SQLCompareEngine\UI\SqlServerGUI\Schema\SchemaGUI\bin\Debug\net472";
-            var assemblies = RedgateAssembliesInFolder(nonObfuscatedBuildFolder, Path.GetDirectoryName(sln)).ToList();
+            const string nonObfuscatedBuildFolder = repoRoot + @"SQLCompareEngine\UI\SqlServerGUI\Schema\SchemaGUI\bin\Debug\net472";
+
+            var assemblies = RedgateAssembliesInFolder(nonObfuscatedBuildFolder, Path.GetDirectoryName(referenced)).ToList();
             Console.WriteLine("Analysing {0} Assemblies", assemblies.Count());
-            //var calls = assemblies.SelectMany(AssemblyAnalyser.AnalyseAssembly).ToList();
             Console.WriteLine("Modifying solution...");
-            //var modifier = new SolutionModifier(new [] {new Rewriter(calls)}, sln);
-            //DumpErrors(modifier.ModifySolution);
 
             using var outFile = File.Open(assertionsOut, FileMode.Create);
             using var writer = new StreamWriter(outFile);
