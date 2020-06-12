@@ -35,6 +35,8 @@ namespace NetDoc
         public static void CreateContractAssertions(TextWriter writer, string referencing, string referenced, IEnumerable<string> assemblies)
         {
             var contract = new ContractClassWriter();
+            using var resolver = new DefaultAssemblyResolver();
+            resolver.AddSearchDirectory(Path.GetDirectoryName(referenced));
             using var assemblyDefinition = AssemblyDefinition.ReadAssembly(referenced);
             var referencedTypes = assemblyDefinition.Modules.SelectMany(a => a.Types)
                 .Select(x => $"{x.Namespace}::{x.Name.Split('`')[0]}").ToHashSet();
@@ -47,11 +49,12 @@ internal abstract class {referencing}ContractAssertions
 {{
     protected abstract T Create<T>();
     protected abstract void CheckReturnType<T>(T param);
+    private class Ref<T> {{ public T Any = default; }}
 
 ");
             foreach (var assembly in assemblies)
             {
-                var calls = AssemblyAnalyser.AnalyseAssembly(assembly)
+                var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
                     .Where(call => TargetsReferencedAssembly(call, referencedTypes));
                 var assemblyName = Path.GetFileNameWithoutExtension(assembly).Replace(".", "");
                 foreach (var x in contract.ProcessCalls(assemblyName, calls))

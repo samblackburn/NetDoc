@@ -63,8 +63,8 @@ namespace NetDoc
                     return AssignToRandomVariable(FieldReference.FieldType, $"{ClassOrInstance}.{FieldReference.Name}");
                 }
 
-                var parameters = string.Join(", ", Parameters(MethodReference.Parameters));
-                var indexerParameters = string.Join(", ", Parameters(MethodReference.Parameters.SkipLast()));
+                var parameters = string.Join(", ", Parameters(MethodReference.Resolve().Parameters));
+                var indexerParameters = string.Join(", ", Parameters(MethodReference.Resolve().Parameters.SkipLast()));
 
                 if (m_Operand.Name == ".ctor")
                 {
@@ -122,9 +122,13 @@ namespace NetDoc
 
         private string SyntaxForParameter(ParameterDefinition param)
         {
-            if (param.ParameterType.IsByReference)
+            if (param.IsOut)
             {
                 return "out _";
+            }
+            if (param.ParameterType.IsByReference)
+            {
+                return $"ref new Ref<{GetTypeName(param.ParameterType)}>().Any";
             }
             return CallToFactory(param.ParameterType);
         }
@@ -169,7 +173,7 @@ namespace NetDoc
                 ? $"<{String.Join(", ", git.GenericArguments.Select(GetTypeName))}>"
                 : "";
             if (!string.IsNullOrEmpty(nameSpace)) nameSpace += ".";
-            var fullName = $"{nameSpace}{className}{generics}";
+            var fullName = $"{nameSpace}{className}{generics}".TrimEnd('&');
 
             switch (fullName)
             {

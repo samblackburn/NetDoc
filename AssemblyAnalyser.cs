@@ -8,11 +8,11 @@ namespace NetDoc
 {
     internal class AssemblyAnalyser
     {
-        internal static IEnumerable<Call> AnalyseAssembly(string path)
+        internal static IEnumerable<Call> AnalyseAssembly(string path, IAssemblyResolver resolver)
         {
             try
             {
-                using var referencingAssembly = AssemblyDefinition.ReadAssembly(path);
+                using var referencingAssembly = AssemblyDefinition.ReadAssembly(path, new ReaderParameters{AssemblyResolver = resolver});
 
                 return referencingAssembly.Modules
                     .SelectMany(a => a.Types)
