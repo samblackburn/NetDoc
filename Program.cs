@@ -13,14 +13,13 @@ namespace NetDoc
         static void Main()
         {
             const string repoRoot = @"C:\Work\";
-            const string referenced = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
+            const string consumedRepo = repoRoot + @"SQLCompareEngine\";
+            const string referenced = consumedRepo + @"Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
             var repos = new[] {"SQLDoc", "SQLDataGenerator", "SQLTest", "SQLPrompt", "SQLSourceControl"};
 
             foreach (var repoName in repos)
             {
-                var assemblies =
-                    RedgateAssembliesInFolder(Path.Combine(repoRoot, repoName), Path.GetDirectoryName(referenced))
-                        .ToList();
+                var assemblies = RedgateAssembliesInFolder(Path.Combine(repoRoot, repoName), consumedRepo).ToList();
                 Console.WriteLine("Analysing {0} Assemblies", assemblies.Count());
                 Console.WriteLine("Modifying solution...");
 
@@ -32,19 +31,19 @@ namespace NetDoc
             }
         }
 
-        public static void CreateContractAssertions(TextWriter writer, string referenced, IEnumerable<string> assemblies)
+        public static void CreateContractAssertions(TextWriter writer, string referencing, string referenced, IEnumerable<string> assemblies)
         {
             var contract = new ContractClassWriter();
             using var assemblyDefinition = AssemblyDefinition.ReadAssembly(referenced);
             var referencedTypes = assemblyDefinition.Modules.SelectMany(a => a.Types)
                 .Select(x => $"{x.Namespace}::{x.Name.Split('`')[0]}").ToHashSet();
-            writer.Write(@"// ReSharper disable UnusedMember.Local
+            writer.Write($@"// ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantTypeArgumentsOfMethod
 // ReSharper disable InconsistentNaming
 // ReSharper disable once CheckNamespace
 // ReSharper disable once UnusedType.Global
-internal abstract class ContractAssertions
-{
+internal abstract class {referencing}ContractAssertions
+{{
     protected abstract T Create<T>();
     protected abstract void CheckReturnType<T>(T param);
 
@@ -70,7 +69,9 @@ internal abstract class ContractAssertions
         private static IEnumerable<string> RedgateAssembliesInFolder(string include, string exclude)
         {
             var allAssemblies = Directory.EnumerateFiles(include, "RedGate.*.dll", SearchOption.AllDirectories)
-                .Concat(Directory.EnumerateFiles(include, "*.exe", SearchOption.AllDirectories));
+                .Concat(Directory.EnumerateFiles(include, "*.exe", SearchOption.AllDirectories))
+                .Where(f => !f.Contains(Path.DirectorySeparatorChar + "packages" + Path.DirectorySeparatorChar))
+                .Where(f => !f.Contains(Path.DirectorySeparatorChar + "."));
             var consumedAssemblies = Directory.EnumerateFiles(exclude, "RedGate.*.dll", SearchOption.AllDirectories)
                 .Select(Path.GetFileName).ToHashSet();
             return allAssemblies.Where(x => !consumedAssemblies.Contains(Path.GetFileName(x)));
