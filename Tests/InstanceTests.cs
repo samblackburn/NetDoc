@@ -38,6 +38,14 @@ namespace NetDoc.Tests
         }
 
         [Test]
+        public void MethodWithParam()
+        {
+            var referenced = Class("public void Foo(int bar) {}", "ReferencedClass");
+            var referencing = Class("public void Bar(ReferencedClass x) {x.Foo(3);}", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
         public void MethodWithOutParam()
         {
             var referenced = Class("public void Foo(out int bar) {bar = 3;}", "ReferencedClass");
@@ -57,7 +65,7 @@ namespace NetDoc.Tests
         public void MethodWithRefParam()
         {
             var referenced = Class("public void Foo(ref int bar) {bar++;}", "ReferencedClass");
-            var referencing = Class("public int Bar(ReferencedClass x) {var bar = 1; x.Foo(ref bar); return bar;}", "ReferencingClass");
+            var referencing = Class("public int Bar(ReferencedClass x) {var bar=1; x.Foo(ref bar); return bar;}", "ReferencingClass");
             ContractAssertionShouldCompile(referencing, referenced);
         }
 
