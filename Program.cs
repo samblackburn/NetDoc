@@ -20,7 +20,9 @@ namespace NetDoc
 
             foreach (var repoName in repos.Select(x => repoRoot + x))
             {
-                var assemblies = RedgateAssembliesInFolder(Path.Combine(repoRoot, repoName), consumedRepo).ToList();
+                var assemblies =
+                    AssembliesInFolder(Path.Combine(repoRoot, repoName), Path.GetDirectoryName(referenced))
+                        .ToList();
                 Console.WriteLine("Analysing {0} Assemblies", assemblies.Count());
                 Console.WriteLine("Modifying solution...");
 
@@ -69,13 +71,13 @@ internal abstract class {referencing}ContractAssertions
         private static bool TargetsReferencedAssembly(Call arg, ICollection<string> candidateTypes) =>
             candidateTypes.Contains(arg.ContainingTypeName);
 
-        private static IEnumerable<string> RedgateAssembliesInFolder(string include, string exclude)
+        private static IEnumerable<string> AssembliesInFolder(string include, string exclude)
         {
-            var allAssemblies = Directory.EnumerateFiles(include, "RedGate.*.dll", SearchOption.AllDirectories)
+            var allAssemblies = Directory.EnumerateFiles(include, "*.dll", SearchOption.AllDirectories)
                 .Concat(Directory.EnumerateFiles(include, "*.exe", SearchOption.AllDirectories))
                 .Where(f => !f.Contains(Path.DirectorySeparatorChar + "packages" + Path.DirectorySeparatorChar))
                 .Where(f => !f.Contains(Path.DirectorySeparatorChar + "."));
-            var consumedAssemblies = Directory.EnumerateFiles(exclude, "RedGate.*.dll", SearchOption.AllDirectories)
+            var consumedAssemblies = Directory.EnumerateFiles(exclude, "*.dll", SearchOption.AllDirectories)
                 .Select(Path.GetFileName).ToHashSet();
             return allAssemblies.Where(x => !consumedAssemblies.Contains(Path.GetFileName(x)))
                 .OrderBy(Path.GetFileName)
