@@ -154,7 +154,9 @@ namespace NetDoc
 
             if (type is GenericParameter ofT)
             {
-                return GetTypeName(ofT.Constraints.Select(c => c.ConstraintType).FirstOrDefault()) ?? "object";
+                return ofT.HasConstraints
+                    ? GetTypeName(ofT.Constraints.Select(c => c.ConstraintType).FirstOrDefault())
+                    : "object";
             }
 
             var nameSpace = type.Namespace;
