@@ -14,19 +14,18 @@ namespace NetDoc
         static void Main()
         {
             const string repoRoot = @"C:\Work\";
-            const string consumedRepo = repoRoot + @"SQLCompareEngine\";
-            const string referenced = consumedRepo + @"Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
+            const string referenced = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
+            const string assertionsOut = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions\";
             var repos = new[] {"SQLDoc", "SQLDataGenerator", "SQLTest", "SQLPrompt", "SQLSourceControl"};
 
-            foreach (var repoName in repos)
+            foreach (var repoName in repos.Select(x => repoRoot + x))
             {
                 var assemblies = RedgateAssembliesInFolder(Path.Combine(repoRoot, repoName), consumedRepo).ToList();
                 Console.WriteLine("Analysing {0} Assemblies", assemblies.Count());
                 Console.WriteLine("Modifying solution...");
 
-                var assertionsOut = Path.Combine(repoRoot, @"SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions\", $"{repoName}.cs");
-                Directory.CreateDirectory(Path.GetDirectoryName(assertionsOut));
-                using var outFile = File.Open(assertionsOut, FileMode.Create);
+                Directory.CreateDirectory(assertionsOut);
+                using var outFile = File.Open(Path.Combine(assertionsOut, $"{Path.GetFileName(repoName)}.cs"), FileMode.Create);
                 using var writer = new StreamWriter(outFile);
                 CreateContractAssertions(writer, repoName, referenced, assemblies);
             }
