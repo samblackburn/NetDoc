@@ -2,19 +2,15 @@
 
 namespace NetDoc
 {
-    static class Linq
+    internal static class Linq
     {
         internal static IEnumerable<T> SkipLast<T>(this IEnumerable<T> source)
         {
-            using (var e = source.GetEnumerator())
+            using var e = source.GetEnumerator();
+            if (!e.MoveNext()) yield break;
+            for (var value = e.Current; e.MoveNext(); value = e.Current)
             {
-                if (e.MoveNext())
-                {
-                    for (var value = e.Current; e.MoveNext(); value = e.Current)
-                    {
-                        yield return value;
-                    }
-                }
+                yield return value;
             }
         }
     }
