@@ -23,7 +23,5 @@
     <PackageReference Include="Microsoft.Net.Compilers" Version="3.6.0">
       <ExcludeAssets>all</ExcludeAssets>
     </PackageReference>
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="WindowsBase" />
   </ItemGroup>
 </Project>
