@@ -12,7 +12,7 @@ namespace NetDoc
 
         public Call(Instruction instruction)
         {
-            m_Operand = instruction.Operand as MemberReference;
+            m_Operand = (MemberReference) instruction.Operand;
             if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Stfld)
             {
                 IsStatic = false;
@@ -107,8 +107,8 @@ namespace NetDoc
 
         public override string ToString() => $"{TypeWithGenerics}{Invocation}";
 
-        private MethodReference MethodReference => m_Operand as MethodReference;
-        private FieldReference FieldReference => m_Operand as FieldReference;
+        private MethodReference? MethodReference => m_Operand as MethodReference;
+        private FieldReference? FieldReference => m_Operand as FieldReference;
 
         private string CallToFactory(TypeReference type) => $"Create<{GetTypeName(type)}>()";
 
