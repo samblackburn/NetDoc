@@ -8,12 +8,10 @@ namespace NetDoc
 {
     internal class Call
     {
-        private readonly MethodDefinition m_Consumer;
         private readonly MemberReference m_Operand;
 
-        public Call(Instruction instruction, MethodDefinition consumer)
+        public Call(Instruction instruction)
         {
-            m_Consumer = consumer;
             m_Operand = instruction.Operand as MemberReference;
             if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Stfld)
             {
@@ -30,10 +28,7 @@ namespace NetDoc
         }
 
         public bool IsStatic { get; }
-        public string Namespace => m_Operand.DeclaringType.Namespace;
-        public string Type => m_Operand.DeclaringType.Name.Split('`')[0];
         public string Method => IgnorePropertyPrefix(m_Operand.Name);
-        public string Consumer => $"{m_Consumer.DeclaringType.Name}.{m_Consumer.Name}";
         public string ClassOrInstance
         {
             get

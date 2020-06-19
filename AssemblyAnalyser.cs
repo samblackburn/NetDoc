@@ -32,7 +32,7 @@ namespace NetDoc
             if (definition?.Body == null) yield break;
             foreach (var instruction in definition.Body.Instructions.Where(IsCall).Where(x => !IsBaseClass(x, definition)))
             {
-                yield return new Call(instruction, definition);
+                yield return new Call(instruction);
             }
         }
 

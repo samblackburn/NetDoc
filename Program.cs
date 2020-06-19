@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
-using System.Threading.Tasks;
 using Mono.Cecil;
 
 namespace NetDoc
@@ -82,32 +79,6 @@ internal abstract class {referencing}ContractAssertions
             return allAssemblies.Where(x => !consumedAssemblies.Contains(Path.GetFileName(x)))
                 .OrderBy(Path.GetFileName)
                 .Distinct(new FileNameOnlyComparer());
-        }
-
-        private static void DumpErrors(Func<Task> asyncMethod)
-        {
-            try
-            {
-                asyncMethod().Wait();
-            }
-            catch (AggregateException ex)
-            {
-                if (ex.InnerException is ReflectionTypeLoadException rtle)
-                {
-                    foreach (var loader in rtle.LoaderExceptions)
-                    {
-                        Console.WriteLine(loader);
-                    }
-                }
-                else
-                {
-                    Console.WriteLine(ex);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
         }
     }
 
