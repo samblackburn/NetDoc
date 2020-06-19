@@ -143,8 +143,6 @@ namespace NetDoc
 
         private string GetTypeName(TypeReference type)
         {
-            var className = type.Name.Split('`')[0];
-
             if (type.Name.StartsWith("!"))
             {
                 var genericParamNumber = int.Parse(type.Name.TrimStart('!'));
@@ -152,11 +150,15 @@ namespace NetDoc
                 type = declaringType.GenericArguments[genericParamNumber];
             }
 
+            var className = type.Name.Split('`')[0];
+
             if (type is GenericParameter ofT)
             {
-                return ofT.HasConstraints
-                    ? GetTypeName(ofT.Constraints.Select(c => c.ConstraintType).FirstOrDefault())
-                    : "object";
+                if (ofT.HasConstraints)
+                    return GetTypeName(ofT.Constraints.Select(c => c.ConstraintType).FirstOrDefault());
+                else if (m_Operand.DeclaringType is GenericInstanceType declaringType)
+                    return GetTypeName(declaringType.GenericArguments.First());
+                else return "object";
             }
 
             var nameSpace = type.Namespace;
