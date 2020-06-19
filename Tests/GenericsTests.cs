@@ -20,5 +20,14 @@ namespace NetDoc.Tests
             var referencing = Class("public void Bar(ReferencedClass<int> x) {x.Foo(3);}", "ReferencingClass");
             ContractAssertionShouldCompile(referencing, referenced);
         }
+
+        [Test]
+        public void TypeConstraint()
+        {
+            var referenced = Class("public void Foo(T param) {}", "ReferencedClass<T, U> where T : System.Collections.Generic.IEnumerable<U>");
+            var referencing = Class("public void Bar(ReferencedClass<DerivedList, int> x) {x.Foo(new DerivedList());}", "ReferencingClass")
+                + Class("", "DerivedList : System.Collections.Generic.List<int>");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
     }
 }
