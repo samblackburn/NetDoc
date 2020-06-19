@@ -8,7 +8,7 @@ using rcx_parse_cli;
 
 namespace NetDoc
 {
-    class Program
+    public class Program
     {
         static void Main(string[] args)
         {
