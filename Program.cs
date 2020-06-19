@@ -2,24 +2,44 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Mono.Cecil;
+using rcx_parse_cli;
 
 namespace NetDoc
 {
     class Program
     {
-        static void Main()
+        static void Main(string[] args)
         {
-            const string repoRoot = @"C:\Work\";
-            const string referenced = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll";
-            const string assertionsOut = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions\";
-            var repos = new[] {"SQLDoc", "SQLDataGenerator", "SQLTest", "SQLPrompt", "SQLSourceControl"};
+            if (!args.Any()) args = new[]
+            {
+                "--referencedFile", @"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll",
+                "--referencingDir", @"C:\Work\SQLPrompt",
+                "--referencingDir", @"C:\Work\SQLSourceControl",
+                "--referencingDir", @"C:\Work\SQLDataGenerator",
+                "--referencingDir", @"C:\Work\SQLDoc",
+                "--outDir",         @"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions\"
+            };
 
-            foreach (var repoPath in repos.Select(x => repoRoot + x))
+            var consumers = new List<string?>();
+            var consumed = new List<string?>();
+            string? assertionsOut = null;
+
+            new ParserBuilder()
+                .WithNameAndVersion("NetDoc", Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown")
+                .SetUi(Console.WriteLine, Environment.Exit)
+                .Add(new Option("--referencingDir", consumers.Add))
+                .Add(new Option("--referencedFile", consumed.Add))
+                .Add(new Option("--outDir", x => assertionsOut = x))
+                .Build().Parse(args);
+
+            foreach (var referenced in consumed)
+            foreach (var repoPath in consumers)
             {
                 var repoName = Path.GetFileName(repoPath);
                 var assemblies =
-                    AssembliesInFolder(repoPath, Path.GetDirectoryName(referenced))
+                    AssembliesInFolder(repoPath ?? ".", Path.GetDirectoryName(referenced))
                         .ToList();
                 Console.WriteLine("Generating assertions for {0} assemblies in {1}...", assemblies.Count, repoName);
 
