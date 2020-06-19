@@ -57,8 +57,10 @@ namespace NetDoc
             resolver.AddSearchDirectory(Path.GetDirectoryName(referenced));
             using var assemblyDefinition = AssemblyDefinition.ReadAssembly(referenced);
             var referencedTypes = assemblyDefinition.Modules.SelectMany(a => a.Types)
-                .Select(x => $"{x.Namespace}::{x.Name.Split('`')[0]}")
-                .Where(x => x != "::<Module>").ToHashSet();
+                .Where(t => t.IsPublic)
+                .Select(x => $"{x.Namespace}::{x.Name}")
+                .Where(x => x != "::<Module>")
+                .ToHashSet();
             writer.Write($@"// ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantTypeArgumentsOfMethod
 // ReSharper disable InconsistentNaming
