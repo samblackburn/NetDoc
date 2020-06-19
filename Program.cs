@@ -29,7 +29,7 @@ namespace NetDoc
                 Directory.CreateDirectory(assertionsOut);
                 using var outFile = File.Open(Path.Combine(assertionsOut, $"{Path.GetFileName(repoName)}.cs"), FileMode.Create);
                 using var writer = new StreamWriter(outFile);
-                CreateContractAssertions(writer, repoName, referenced, assemblies);
+                CreateContractAssertions(writer, Path.GetFileName(repoName), referenced, assemblies);
             }
         }
 
