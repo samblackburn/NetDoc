@@ -19,18 +19,21 @@ namespace NetDoc
                 "--referencingDir", @"C:\Work\SQLSourceControl",
                 "--referencingDir", @"C:\Work\SQLDataGenerator",
                 "--referencingDir", @"C:\Work\SQLDoc",
+                "--excludeDir",     @"C:\Work\SQLCompareEngine",
                 "--outDir",         @"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions\"
             };
 
             var consumers = new List<string?>();
             var consumed = new List<string?>();
             string? assertionsOut = null;
+            string? exclude = null;
 
             new ParserBuilder()
                 .WithNameAndVersion("NetDoc", Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown")
                 .SetUi(Console.WriteLine, Environment.Exit)
                 .Add(new Option("--referencingDir", consumers.Add))
                 .Add(new Option("--referencedFile", consumed.Add))
+                .Add(new Option("--excludeDir", x => exclude = x))
                 .Add(new Option("--outDir", x => assertionsOut = x))
                 .Build().Parse(args);
 
@@ -39,7 +42,7 @@ namespace NetDoc
             {
                 var repoName = Path.GetFileName(repoPath);
                 var assemblies =
-                    AssembliesInFolder(repoPath ?? ".", Path.GetDirectoryName(referenced))
+                    AssembliesInFolder(repoPath ?? ".", exclude ?? Path.GetDirectoryName(referenced))
                         .ToList();
                 Console.WriteLine("Generating assertions for {0} assemblies in {1}...", assemblies.Count, repoName);
 
