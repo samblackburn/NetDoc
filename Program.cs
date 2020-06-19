@@ -15,18 +15,18 @@ namespace NetDoc
             const string assertionsOut = repoRoot + @"SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions\";
             var repos = new[] {"SQLDoc", "SQLDataGenerator", "SQLTest", "SQLPrompt", "SQLSourceControl"};
 
-            foreach (var repoName in repos.Select(x => repoRoot + x))
+            foreach (var repoPath in repos.Select(x => repoRoot + x))
             {
                 var assemblies =
-                    AssembliesInFolder(Path.Combine(repoRoot, repoName), Path.GetDirectoryName(referenced))
+                    AssembliesInFolder(repoPath, Path.GetDirectoryName(referenced))
                         .ToList();
                 Console.WriteLine("Analysing {0} Assemblies", assemblies.Count());
                 Console.WriteLine("Modifying solution...");
 
                 Directory.CreateDirectory(assertionsOut);
-                using var outFile = File.Open(Path.Combine(assertionsOut, $"{Path.GetFileName(repoName)}.cs"), FileMode.Create);
+                using var outFile = File.Open(Path.Combine(assertionsOut, $"{Path.GetFileName(repoPath)}.cs"), FileMode.Create);
                 using var writer = new StreamWriter(outFile);
-                CreateContractAssertions(writer, Path.GetFileName(repoName), referenced, assemblies);
+                CreateContractAssertions(writer, Path.GetFileName(repoPath), referenced, assemblies);
             }
         }
 
