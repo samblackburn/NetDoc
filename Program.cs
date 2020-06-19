@@ -17,16 +17,16 @@ namespace NetDoc
 
             foreach (var repoPath in repos.Select(x => repoRoot + x))
             {
+                var repoName = Path.GetFileName(repoPath);
                 var assemblies =
                     AssembliesInFolder(repoPath, Path.GetDirectoryName(referenced))
                         .ToList();
-                Console.WriteLine("Analysing {0} Assemblies", assemblies.Count());
-                Console.WriteLine("Modifying solution...");
+                Console.WriteLine("Generating assertions for {0} assemblies in {1}...", assemblies.Count, repoName);
 
                 Directory.CreateDirectory(assertionsOut);
-                using var outFile = File.Open(Path.Combine(assertionsOut, $"{Path.GetFileName(repoPath)}.cs"), FileMode.Create);
+                using var outFile = File.Open(Path.Combine(assertionsOut, $"{repoName}.cs"), FileMode.Create);
                 using var writer = new StreamWriter(outFile);
-                CreateContractAssertions(writer, Path.GetFileName(repoPath), referenced, assemblies);
+                CreateContractAssertions(writer, repoName, referenced, assemblies);
             }
         }
 
