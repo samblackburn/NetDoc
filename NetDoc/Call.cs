@@ -99,7 +99,7 @@ namespace NetDoc
         {
             if (MethodReference is GenericInstanceMethod gim)
             {
-                return "<" + String.Join(",", gim.GenericArguments.Select(GetTypeName)) + ">";
+                return "<" + String.Join(",", gim.GenericArguments.Select(x => GetTypeName(x))) + ">";
             }
 
             return "";
@@ -141,13 +141,16 @@ namespace NetDoc
             return name;
         }
 
-        private string GetTypeName(TypeReference type)
+        private string GetTypeName(TypeReference type, GenericInstanceType? declaringType = null)
         {
+            declaringType ??= m_Operand.DeclaringType as GenericInstanceType;
             if (type.Name.StartsWith("!"))
             {
                 var genericParamNumber = int.Parse(type.Name.TrimStart('!'));
-                if (!(m_Operand.DeclaringType is GenericInstanceType declaringType)) return "object";
-                type = declaringType.GenericArguments[genericParamNumber];
+                if (declaringType != null)
+                    type = declaringType.GenericArguments[genericParamNumber];
+                else
+                    return "object";
             }
 
             var className = type.Name.Split('`')[0];
@@ -156,7 +159,7 @@ namespace NetDoc
             {
                 if (ofT.HasConstraints)
                     return GetTypeName(ofT.Constraints.Select(c => c.ConstraintType).FirstOrDefault());
-                else if (m_Operand.DeclaringType is GenericInstanceType declaringType)
+                else if (declaringType != null)
                     return GetTypeName(declaringType.GenericArguments.First());
                 else return "object";
             }
@@ -169,7 +172,7 @@ namespace NetDoc
             }
 
             var generics = type is GenericInstanceType git
-                ? $"<{String.Join(", ", git.GenericArguments.Select(GetTypeName))}>"
+                ? $"<{String.Join(", ", git.GenericArguments.Select(x => GetTypeName(x)))}>"
                 : "";
             if (!string.IsNullOrEmpty(nameSpace)) nameSpace += ".";
             var fullName = $"{nameSpace}{className}{generics}".TrimEnd('&');
