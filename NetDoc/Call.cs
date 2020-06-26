@@ -197,7 +197,7 @@ namespace NetDoc
         /// </returns>
         private bool CanSeeFromAssertion(TypeReference type)
         {
-            var referenced = m_Operand.DeclaringType.Scope.Name;
+            var referenced = m_Operand.DeclaringType.Scope.Name + ".dll";
             var referencing = m_Operand.Module.Name;
             if (type.Scope.Name == referenced) return true;
             if (type.Scope.Name == referencing) return false;
