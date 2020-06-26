@@ -143,6 +143,11 @@ namespace NetDoc
 
         private string GetTypeName(TypeReference type, GenericInstanceType? declaringType = null)
         {
+            if (type is TypeDefinition def && !CanSeeFromAssertion(type) && CanSeeFromAssertion(def.BaseType))
+            {
+                return GetTypeName(def.BaseType);
+            }
+
             declaringType ??= m_Operand.DeclaringType as GenericInstanceType;
             if (type.Name.StartsWith("!"))
             {
@@ -155,13 +160,9 @@ namespace NetDoc
 
             var className = type.Name.Split('`')[0];
 
-            if (type is GenericParameter ofT)
+            if (type is GenericParameter ofT && declaringType != null)
             {
-                if (ofT.HasConstraints)
-                    return GetTypeName(ofT.Constraints.Select(c => c.ConstraintType).FirstOrDefault());
-                else if (declaringType != null)
-                    return GetTypeName(declaringType.GenericArguments.First());
-                else return "object";
+                return GetTypeName(declaringType.GenericArguments[ofT.Position]);
             }
 
             var nameSpace = type.Namespace;
@@ -187,6 +188,21 @@ namespace NetDoc
                 case "System.Int64": return "long";
                 default: return fullName;
             }
+        }
+
+        /// <returns>
+        /// True if the type is in the referenced dll
+        /// True if the type is in the .NET Framework
+        /// False if the type is in the referencing dll
+        /// </returns>
+        private bool CanSeeFromAssertion(TypeReference type)
+        {
+            var referenced = m_Operand.DeclaringType.Scope.Name;
+            var referencing = m_Operand.Module.Name;
+            if (type.Scope.Name == referenced) return true;
+            if (type.Scope.Name == referencing) return false;
+            if (type.Scope.Name == "mscorlib") return true;
+            throw new NotImplementedException();
         }
     }
 }
