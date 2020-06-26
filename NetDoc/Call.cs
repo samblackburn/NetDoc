@@ -58,8 +58,8 @@ namespace NetDoc
                     return AssignToRandomVariable(FieldReference.FieldType, $"{ClassOrInstance}.{FieldReference.Name}");
                 }
 
-                var parameters = string.Join(", ", Parameters(MethodReference.Resolve().Parameters));
-                var indexerParameters = string.Join(", ", Parameters(MethodReference.Resolve().Parameters.SkipLast()));
+                var parameters = string.Join(", ", Parameters(MethodReference.Resolve()?.Parameters ?? MethodReference.Parameters));
+                var indexerParameters = string.Join(", ", Parameters(MethodReference.Resolve()?.Parameters ?? MethodReference.Parameters.SkipLast()));
 
                 if (m_Operand.Name == ".ctor")
                 {
