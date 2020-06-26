@@ -15,55 +15,47 @@ namespace NetDoc
             if (!args.Any()) args = new[]
             {
                 "--referencedFile", @"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll",
+                "--referencedFile", @"C:\Work\SQLCompareEngine\Engine\SQLDataCompareEngine\Engine\bin\Debug\net472\RedGate.SQLDataCompare.Engine.dll",
                 "--referencingDir", @"C:\Work\SQLPrompt",
                 "--referencingDir", @"C:\Work\SQLSourceControl",
                 "--referencingDir", @"C:\Work\SQLDataGenerator",
                 "--referencingDir", @"C:\Work\SQLDoc",
                 "--excludeDir",     @"C:\Work\SQLCompareEngine",
-                "--outDir",         @"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Testing\UnitTests\ContractAssertions\"
+                "--outDir",         @"C:\Work\SQLCompareEngine\Engine\SQLDataCompareEngine\Testing\UnitTests\ContractAssertions\"
             };
 
             var consumers = new List<string?>();
             var consumed = new List<string?>();
             string? assertionsOut = null;
-            string? exclude = null;
+            var exclude = new List<string?>();
 
             new ParserBuilder()
                 .WithNameAndVersion("NetDoc", Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown")
                 .SetUi(Console.WriteLine, Environment.Exit)
                 .Add(new Option("--referencingDir", consumers.Add))
                 .Add(new Option("--referencedFile", consumed.Add))
-                .Add(new Option("--excludeDir", x => exclude = x))
+                .Add(new Option("--excludeDir", exclude.Add))
                 .Add(new Option("--outDir", x => assertionsOut = x))
                 .Build().Parse(args);
 
-            foreach (var referenced in consumed)
             foreach (var repoPath in consumers)
             {
                 var repoName = Path.GetFileName(repoPath);
                 var assemblies =
-                    AssembliesInFolder(repoPath ?? ".", exclude ?? Path.GetDirectoryName(referenced))
-                        .ToList();
+                    AssembliesInFolder(repoPath ?? ".", exclude.Concat(consumed.Select(Path.GetDirectoryName))).ToList();
                 Console.WriteLine("Generating assertions for {0} assemblies in {1}...", assemblies.Count, repoName);
 
                 Directory.CreateDirectory(assertionsOut);
                 using var outFile = File.Open(Path.Combine(assertionsOut, $"{repoName}.cs"), FileMode.Create);
                 using var writer = new StreamWriter(outFile);
-                CreateContractAssertions(writer, repoName, referenced, assemblies);
+                CreateContractAssertions(writer, repoName, consumed, assemblies);
             }
         }
 
-        public static void CreateContractAssertions(TextWriter writer, string referencing, string referenced, IEnumerable<string> assemblies)
+        public static void CreateContractAssertions(TextWriter writer, string referencing, IEnumerable<string> referenced, IEnumerable<string> assemblies)
         {
             var contract = new ContractClassWriter();
-            using var resolver = new DefaultAssemblyResolver();
-            resolver.AddSearchDirectory(Path.GetDirectoryName(referenced));
-            using var assemblyDefinition = AssemblyDefinition.ReadAssembly(referenced);
-            var referencedTypes = assemblyDefinition.Modules.SelectMany(a => a.Types)
-                .Where(t => t.IsPublic)
-                .Select(x => $"{x.Namespace}::{x.Name}")
-                .Where(x => x != "::<Module>")
-                .ToHashSet();
+
             writer.Write($@"// ReSharper disable UnusedMember.Local
 // ReSharper disable RedundantTypeArgumentsOfMethod
 // ReSharper disable InconsistentNaming
@@ -76,6 +68,18 @@ internal abstract class {referencing}ContractAssertions
     private class Ref<T> {{ public T Any = default; }}
 
 ");
+            using var resolver = new DefaultAssemblyResolver();
+            foreach (var r in referenced)
+            {
+                resolver.AddSearchDirectory(Path.GetDirectoryName(r));
+            }
+
+            var assemblyDefinitions = referenced.Select(AssemblyDefinition.ReadAssembly);
+            var referencedTypes = assemblyDefinitions.SelectMany(d => d.Modules).SelectMany(a => a.Types)
+                .Where(t => t.IsPublic)
+                .Select(x => $"{x.Namespace}::{x.Name}")
+                .Where(x => x != "::<Module>")
+                .ToHashSet();
             foreach (var assembly in assemblies)
             {
                 var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
@@ -94,13 +98,14 @@ internal abstract class {referencing}ContractAssertions
         private static bool TargetsReferencedAssembly(Call arg, ICollection<string> candidateTypes) =>
             candidateTypes.Contains(arg.ContainingTypeName);
 
-        private static IEnumerable<string> AssembliesInFolder(string include, string exclude)
+        private static IEnumerable<string> AssembliesInFolder(string include, IEnumerable<string> exclude)
         {
             var allAssemblies = Directory.EnumerateFiles(include, "*.dll", SearchOption.AllDirectories)
                 .Concat(Directory.EnumerateFiles(include, "*.exe", SearchOption.AllDirectories))
                 .Where(f => !f.Contains(Path.DirectorySeparatorChar + "packages" + Path.DirectorySeparatorChar))
                 .Where(f => !f.Contains(Path.DirectorySeparatorChar + "."));
-            var consumedAssemblies = Directory.EnumerateFiles(exclude, "*.dll", SearchOption.AllDirectories)
+            var consumedAssemblies = exclude
+                .SelectMany(ex => Directory.EnumerateFiles(ex, "*.dll", SearchOption.AllDirectories))
                 .Select(Path.GetFileName).ToHashSet();
             return allAssemblies.Where(x => !consumedAssemblies.Contains(Path.GetFileName(x)))
                 .OrderBy(Path.GetFileName)
