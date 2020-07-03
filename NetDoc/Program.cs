@@ -126,17 +126,17 @@ internal abstract class {referencing}ContractAssertions
         }
     }
 
-    internal class FileNameOnlyComparer : IEqualityComparer<string>
+    internal class FileNameOnlyComparer : IEqualityComparer<string?>
     {
-        public bool Equals(string left, string right)
+        public bool Equals(string? left, string? right)
         {
             if (left == null) return right == null;
             return Path.GetFileName(left).Equals(Path.GetFileName(right), StringComparison.OrdinalIgnoreCase);
         }
 
-        public int GetHashCode(string obj)
+        public int GetHashCode(string? obj)
         {
-            return Path.GetFileName(obj).GetHashCode();
+            return Path.GetFileName(obj)?.GetHashCode() ?? -1;
         }
     }
 }
