@@ -25,13 +25,31 @@ Switch             | Description
 
 ## Example usage
 
+```powershell
+md Library
+echo '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net4</TargetFramework></PropertyGroup></Project>' > Library\Library.csproj
+echo "public class ShouldBePrivate{ public void DoNotUse() {} }" > Library\ShouldBePrivate.cs
+dotnet build Library
+
+md MyConsumer
+echo '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net4</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="..\Library\Library.csproj"/></ItemGroup></Project>' > MyConsumer\MyConsumer.csproj
+echo "public class NaughtyConsumer{ public void Foo() { new ShouldBePrivate().DoNotUse(); } }" > MyConsumer\NaughtyConsumer.cs
+dotnet build MyConsumer
+
+NetDoc.exe `
+  --referencingDir MyConsumer `
+  --referencedFile Library\Bin\Debug\net4\Library.dll `
+  --outDir LibraryTests\ContractAssertions
 ```
-netdoc.exe --referencingDir MyProduct\Bin\Debug `
-           --referencingDir AnotherProduct\Bin\Debug `
-           --referencedFile Library\Bin\Debug\Library.dll `
-           --outDir LibraryTests\ContractAssertions
+The above example will create a `MyConsumerContractAssertions` class which documents the usage of the class `ShouldBePrivate`:
+```c#
+    private void UsedByMyConsumer()
+    {
+        CheckReturnType<ShouldBePrivate>(new ShouldBePrivate());
+        Create<ShouldBePrivate>().DoNotUse();
+    }
 ```
-The above command would scan 2 directories for referencing dll/exe files and document all usages of the public API of `Library.dll`.  It would then output `MyProduct.cs` and `AnotherProduct.cs` contract classes, which break down the usages into a method for each assembly (in those product folders) that consumes the library.
+If this class is compiled as part of the library's build, maintainers will immediately see that `ShouldBePrivate` is in use and should not be deleted without notifying the maintainers of the consuming codebase.
 
 ## Build/test
 
