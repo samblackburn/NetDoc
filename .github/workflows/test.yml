@@ -1,4 +1,4 @@
-name: .NET Core
+name: Build + run tests
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
@@ -18,10 +18,8 @@ jobs:
       with:
         dotnet-version: 3.1.101
     - name: Install dependencies
-      run: dotnet restore --packages /home/runner/work/NetDoc/NetDoc/homefolder/.nuget/packages
+      run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
-      env:
-        USERPROFILE: /home/runner/work/NetDoc/NetDoc/homefolder
