@@ -35,4 +35,6 @@ The above command would scan 2 directories for referencing dll/exe files and doc
 
 ## Build/test
 
-No dependencies - should be easy to checkout, `dotnet build` and run the tests in this repo.  I have only tried doing so on Windows but in principle it's cross-platform.  The tests do a lot of compilation, so take around 20 seconds each!
+![Build + run tests](https://github.com/samblackburn/NetDoc/workflows/Build%20+%20run%20tests/badge.svg)
+
+No build dependencies - should be easy to checkout, `dotnet build` and run the tests in this repo.  I think NetDoc ought to work on Linux but the tests depend on compilers that aren't on the default Linux agent.  The tests do a lot of compilation, so take around 20 seconds each!
