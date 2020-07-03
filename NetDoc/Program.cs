@@ -74,7 +74,7 @@ internal abstract class {referencing}ContractAssertions
                 resolver.AddSearchDirectory(Path.GetDirectoryName(r));
             }
 
-            var assemblyDefinitions = referenced.Select(AssemblyDefinition.ReadAssembly);
+            var assemblyDefinitions = referenced.Select(AssemblyDefinition.ReadAssembly).ToList();
             var referencedTypes = assemblyDefinitions.SelectMany(d => d.Modules).SelectMany(a => a.Types)
                 .Where(t => t.IsPublic)
                 .Select(x => $"{x.Namespace}::{x.Name}")
@@ -93,6 +93,11 @@ internal abstract class {referencing}ContractAssertions
 
             writer.Write(@"}");
             writer.Flush();
+
+            foreach (var ad in assemblyDefinitions)
+            {
+                ad.Dispose();
+            }
         }
 
         private static bool TargetsReferencedAssembly(Call arg, ICollection<string> candidateTypes) =>
