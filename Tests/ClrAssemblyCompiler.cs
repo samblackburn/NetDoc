@@ -18,13 +18,11 @@ namespace RedGate.SQLCompare.Engine.TestUtils
 
     public static class ClrAssemblyCompiler
     {
-        public static string[] CompileDlls(string testAssemblySource, string referencedAssemblySource)
+        public static (string referencedDll, string testDll) CompileDlls(string testAssemblySource, string referencedAssemblySource)
         {
-            var referencedDll = CompileDll(TempDir.Get(), NetFrameworkVersion.Net35, "ReferencedAssembly",
-                referencedAssemblySource);
-            var testDll = CompileDll(TempDir.Get(), NetFrameworkVersion.Net35, "TestAssembly", testAssemblySource,
-                referencedDll);
-            return new[] {referencedDll, testDll};
+            var referencedDll = CompileDll(TempDir.Get(), NetFrameworkVersion.Net35, "ReferencedAssembly", referencedAssemblySource);
+            var referencingDll = CompileDll(TempDir.Get(), NetFrameworkVersion.Net35, "TestAssembly", testAssemblySource, referencedDll);
+            return (referencedDll, referencingDll);
         }
 
         private static string Net4Compiler { get; } = Path.Combine(PackagesFolder, "microsoft.net.compilers", "3.6.0", "tools", "csc.exe");

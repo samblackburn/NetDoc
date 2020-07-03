@@ -9,9 +9,9 @@ namespace NetDoc.Tests
     {
         protected static void ContractAssertionShouldCompile(string referencing, string referenced)
         {
-            var dlls = ClrAssemblyCompiler.CompileDlls(referencing, referenced);
+            var (referencedDll, referencingDll) = ClrAssemblyCompiler.CompileDlls(referencing, referenced);
             using var writer = new StringWriter();
-            Program.CreateContractAssertions(writer, "", new[]{dlls[0]}, new[] {dlls[1]});
+            Program.CreateContractAssertions(writer, "", new[] {referencedDll}, new[] {referencingDll});
             Console.WriteLine(writer.ToString());
             ClrAssemblyCompiler.CompileDlls(writer.ToString(), referenced);
             StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString(),
@@ -20,9 +20,9 @@ namespace NetDoc.Tests
 
         protected static void ContractAssertionShouldBeEmpty(string referencing, string referenced)
         {
-            var dlls = ClrAssemblyCompiler.CompileDlls(referencing, referenced);
+            var (referencedDll, referencingDll) = ClrAssemblyCompiler.CompileDlls(referencing, referenced);
             using var writer = new StringWriter();
-            Program.CreateContractAssertions(writer, "", new[] { dlls[0] }, new[] { dlls[1] });
+            Program.CreateContractAssertions(writer, "", new[] {referencedDll}, new[] {referencingDll});
             Console.WriteLine(writer.ToString());
             StringAssert.DoesNotContain("private void UsedByTestAssembly()", writer.ToString(),
                 "There shouldn't be a contract assertion");
