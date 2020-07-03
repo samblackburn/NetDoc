@@ -5,7 +5,7 @@ If you have a good API, you won't need this tool.  However, if you have to maint
  - a ton of public classes/methods that should have been private
  - several consumers that you're afraid of breaking
  
-...then read on!
+...then this may be the tool for you.
 
 ## How it works
 
@@ -16,9 +16,19 @@ This means you should be able to change/remove unused code safely, as long as yo
 
 ## Command line syntax
 
-Switch                        | Description
-:-----------------------------|:-------------------
-`--referencingDir C:\FooDir`  | The folder containing your referencing dlls.
-`--referencedFile C:\Bar.dll` | Your referencing dll.
-`--excludeDir C:\BazDir`      | Files in the referencing dir will be excluded if there is a file with the same name in the exclude dir.
-`--outDir C:\OutDir`          | Where to output the .cs files containing the contract assertions.  This switch should only be used once.
+Switch             | Description
+:------------------|:-------------------
+`--referencingDir` | The folder containing your referencing dlls.
+`--referencedFile` | Your referencing dll.
+`--excludeDir`     | Files in the referencing dir will be excluded if there is a file with the same name in the exclude dir.
+`--outDir`         | Where to output the .cs files containing the contract assertions.  This switch should only be used once.
+
+## Example usage
+
+```
+netdoc.exe --referencingDir MyProduct\Bin\Debug `
+           --referencingDir AnotherProduct\Bin\Debug `
+           --referencedFile Library\Bin\Debug\Library.dll `
+           --outDir LibraryTests\ContractAssertions
+```
+The above command would scan 2 directories for referencing dll/exe files and document all usages of the public API of `Library.dll`.  It would then output `MyProduct.cs` and `AnotherProduct.cs` contract classes, which break down the usages into a method for each assembly (in those product folders) that consumes the library.
