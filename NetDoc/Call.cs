@@ -59,7 +59,7 @@ namespace NetDoc
                 }
 
                 var parameters = string.Join(", ", Parameters(MethodReference.Resolve()?.Parameters ?? MethodReference.Parameters));
-                var indexerParameters = string.Join(", ", Parameters(MethodReference.Resolve()?.Parameters ?? MethodReference.Parameters.SkipLast()));
+                var indexerParameters = string.Join(", ", Parameters(MethodReference.Resolve()?.Parameters.SkipLast() ?? MethodReference.Parameters.SkipLast()));
 
                 if (m_Operand.Name == ".ctor")
                 {
