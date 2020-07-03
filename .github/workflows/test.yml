@@ -18,10 +18,10 @@ jobs:
       with:
         dotnet-version: 3.1.101
     - name: Install dependencies
-      run: dotnet restore --packages homefolder/.nuget/packages
+      run: dotnet restore --packages /home/runner/work/NetDoc/NetDoc/homefolder/.nuget/packages
     - name: Build
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
       env:
-        USERPROFILE: homefolder
+        USERPROFILE: /home/runner/work/NetDoc/NetDoc/homefolder
