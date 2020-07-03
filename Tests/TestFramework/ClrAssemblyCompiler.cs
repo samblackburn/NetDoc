@@ -54,7 +54,10 @@ namespace Tests.TestFramework
             return referenceDir.FullName;
         }
 
-        public static string PackagesFolder => Path.Combine(Environment.GetEnvironmentVariable("USERPROFILE"), ".nuget", "packages");
+        public static string PackagesFolder =>
+            Environment.GetEnvironmentVariable("USERPROFILE") is { } profile
+                ? Path.Combine(profile, ".nuget", "packages")
+                : Path.Combine(Directory.GetCurrentDirectory(), "packages");
 
         // Copied from what dotnet build references,
         // with DLLs that aren't present in the NuGet reference DLLs package removed,
@@ -72,7 +75,7 @@ namespace Tests.TestFramework
             return BaseReferenceAssemblies[frameworkVersion].Select(r => Path.Combine(path, r));
         }
 
-        private static string CompileDll(string tempDir, NetFrameworkVersion frameworkVersion, string assemblyName, string sourceCode, string referencedDll = null)
+        private static string CompileDll(string tempDir, NetFrameworkVersion frameworkVersion, string assemblyName, string sourceCode, string? referencedDll = null)
         {
             var outputDll = Path.Combine(tempDir, $"{assemblyName}.dll");
             var sourcePath = Path.Combine(tempDir, $"code{assemblyName}.cs");

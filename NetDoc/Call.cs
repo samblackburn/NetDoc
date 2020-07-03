@@ -23,7 +23,7 @@ namespace NetDoc
             }
             else
             {
-                IsStatic = !MethodReference.HasThis;
+                IsStatic = !MethodReference!.HasThis;
             }
         }
 
@@ -58,7 +58,7 @@ namespace NetDoc
                     return AssignToRandomVariable(FieldReference.FieldType, $"{ClassOrInstance}.{FieldReference.Name}");
                 }
 
-                var parameters = string.Join(", ", Parameters(MethodReference.Resolve()?.Parameters ?? MethodReference.Parameters));
+                var parameters = string.Join(", ", Parameters(MethodReference!.Resolve()?.Parameters ?? MethodReference.Parameters));
                 var indexerParameters = string.Join(", ", Parameters(MethodReference.Resolve()?.Parameters.SkipLast() ?? MethodReference.Parameters.SkipLast()));
 
                 if (m_Operand.Name == ".ctor")

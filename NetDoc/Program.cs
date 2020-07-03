@@ -12,19 +12,19 @@ namespace NetDoc
     {
         static void Main(string[] args)
         {
-            var consumers = new List<string?>();
-            var consumed = new List<string?>();
+            var consumers = new List<string>();
+            var consumed = new List<string>();
             string? assertionsOut = null;
             bool help = false;
-            var exclude = new List<string?>();
+            var exclude = new List<string>();
 
             new ParserBuilder()
                 .WithNameAndVersion("NetDoc",
                     Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown")
                 .SetUi(Console.WriteLine, Environment.Exit)
-                .Add(new Option("--referencingDir", consumers.Add))
-                .Add(new Option("--referencedFile", consumed.Add))
-                .Add(new Option("--excludeDir", exclude.Add))
+                .Add(new Option("--referencingDir", s => consumers.Add(s!)))
+                .Add(new Option("--referencedFile", s => consumed.Add(s!)))
+                .Add(new Option("--excludeDir", s => exclude.Add(s!)))
                 .Add(new Option("--outDir", x => assertionsOut = x))
                 .Add(new Option("--help", x => help = true))
                 .Build().Parse(args);
@@ -111,7 +111,7 @@ internal abstract class {referencing}ContractAssertions
         private static bool TargetsReferencedAssembly(Call arg, ICollection<string> candidateTypes) =>
             candidateTypes.Contains(arg.ContainingTypeName);
 
-        private static IEnumerable<string> AssembliesInFolder(string include, IEnumerable<string> exclude)
+        private static IEnumerable<string> AssembliesInFolder(string include, IEnumerable<string?> exclude)
         {
             var allAssemblies = Directory.EnumerateFiles(include, "*.dll", SearchOption.AllDirectories)
                 .Concat(Directory.EnumerateFiles(include, "*.exe", SearchOption.AllDirectories))
