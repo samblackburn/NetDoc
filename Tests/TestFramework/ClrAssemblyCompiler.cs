@@ -5,10 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
-using NetDoc.Tests;
 using NUnit.Framework;
 
-namespace RedGate.SQLCompare.Engine.TestUtils
+namespace Tests.TestFramework
 {
     public enum NetFrameworkVersion
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 
-namespace NetDoc.Tests
+namespace Tests.TestFramework
 {
     [EditorBrowsable(EditorBrowsableState.Never)]
     public class TempDir : IDisposable

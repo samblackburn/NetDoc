@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
+using Tests.TestFramework;
 
-namespace NetDoc.Tests
+namespace Tests
 {
     [TestFixture]
     class InstanceTests : TestMethods

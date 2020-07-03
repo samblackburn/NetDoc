@@ -1,6 +1,7 @@
 ﻿using NUnit.Framework;
+using Tests.TestFramework;
 
-namespace NetDoc.Tests
+namespace Tests
 {
     /// <summary>
     /// Ideally we'd produce assertions for inheritance hierarchies,

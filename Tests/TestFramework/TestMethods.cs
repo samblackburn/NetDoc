@@ -1,9 +1,9 @@
 ﻿using System;
 using System.IO;
+using NetDoc;
 using NUnit.Framework;
-using RedGate.SQLCompare.Engine.TestUtils;
 
-namespace NetDoc.Tests
+namespace Tests.TestFramework
 {
     abstract class TestMethods
     {
