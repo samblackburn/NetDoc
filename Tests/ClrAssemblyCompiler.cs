@@ -20,8 +20,8 @@ namespace RedGate.SQLCompare.Engine.TestUtils
     {
         public static (string referencedDll, string testDll) CompileDlls(string testAssemblySource, string referencedAssemblySource)
         {
-            var referencedDll = CompileDll(TempDir.Get(), NetFrameworkVersion.Net35, "ReferencedAssembly", referencedAssemblySource);
-            var referencingDll = CompileDll(TempDir.Get(), NetFrameworkVersion.Net35, "TestAssembly", testAssemblySource, referencedDll);
+            var referencedDll = CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "ReferencedAssembly", referencedAssemblySource);
+            var referencingDll = CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "TestAssembly", testAssemblySource, referencedDll);
             return (referencedDll, referencingDll);
         }
 
