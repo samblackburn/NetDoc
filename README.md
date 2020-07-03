@@ -32,3 +32,7 @@ netdoc.exe --referencingDir MyProduct\Bin\Debug `
            --outDir LibraryTests\ContractAssertions
 ```
 The above command would scan 2 directories for referencing dll/exe files and document all usages of the public API of `Library.dll`.  It would then output `MyProduct.cs` and `AnotherProduct.cs` contract classes, which break down the usages into a method for each assembly (in those product folders) that consumes the library.
+
+## Build/test
+
+No dependencies - should be easy to checkout, `dotnet build` and run the tests in this repo.  I have only tried doing so on Windows but in principle it's cross-platform.  The tests do a lot of compilation, so take around 20 seconds each!
