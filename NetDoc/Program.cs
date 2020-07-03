@@ -12,31 +12,28 @@ namespace NetDoc
     {
         static void Main(string[] args)
         {
-            if (!args.Any()) args = new[]
-            {
-                "--referencedFile", @"C:\Work\SQLCompareEngine\Engine\SQLCompareEngine\Engine\bin\Debug\net472\RedGate.SQLCompare.Engine.dll",
-                "--referencedFile", @"C:\Work\SQLCompareEngine\Engine\SQLDataCompareEngine\Engine\bin\Debug\net472\RedGate.SQLDataCompare.Engine.dll",
-                "--referencingDir", @"C:\Work\SQLPrompt",
-                "--referencingDir", @"C:\Work\SQLSourceControl",
-                "--referencingDir", @"C:\Work\SQLDataGenerator",
-                "--referencingDir", @"C:\Work\SQLDoc",
-                "--excludeDir",     @"C:\Work\SQLCompareEngine",
-                "--outDir",         @"C:\Work\SQLCompareEngine\Engine\SQLDataCompareEngine\Testing\UnitTests\ContractAssertions\"
-            };
-
             var consumers = new List<string?>();
             var consumed = new List<string?>();
             string? assertionsOut = null;
+            bool help = false;
             var exclude = new List<string?>();
 
             new ParserBuilder()
-                .WithNameAndVersion("NetDoc", Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown")
+                .WithNameAndVersion("NetDoc",
+                    Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown")
                 .SetUi(Console.WriteLine, Environment.Exit)
                 .Add(new Option("--referencingDir", consumers.Add))
                 .Add(new Option("--referencedFile", consumed.Add))
                 .Add(new Option("--excludeDir", exclude.Add))
                 .Add(new Option("--outDir", x => assertionsOut = x))
+                .Add(new Option("--help", x => help = true))
                 .Build().Parse(args);
+
+            if (help || assertionsOut == null)
+            {
+                PrintHelp();
+                return;
+            }
 
             foreach (var repoPath in consumers)
             {
@@ -50,6 +47,17 @@ namespace NetDoc
                 using var writer = new StreamWriter(outFile);
                 CreateContractAssertions(writer, repoName, consumed, assemblies);
             }
+        }
+
+        private static void PrintHelp()
+        {
+            Console.WriteLine("Usage:");
+            Console.WriteLine("    --referencingDir  The folder containing your referencing dlls.");
+            Console.WriteLine("    --referencedFile  Your referencing dll.");
+            Console.WriteLine("    --excludeDir      Files in the referencing dir will be excluded if there");
+            Console.WriteLine("                      is a file with the same name in the exclude dir.");
+            Console.WriteLine("    --outDir          Where to output the.cs files containing the contract");
+            Console.WriteLine("                      assertions. This switch should only be used once.");
         }
 
         public static void CreateContractAssertions(TextWriter writer, string referencing, IEnumerable<string> referenced, IEnumerable<string> assemblies)
