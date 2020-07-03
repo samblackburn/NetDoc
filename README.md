@@ -26,13 +26,12 @@ Switch             | Description
 ## Example usage
 
 ```powershell
-md Library
-echo '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net4</TargetFramework></PropertyGroup></Project>' > Library\Library.csproj
+dotnet new classlib -o Library
 echo "public class ShouldBePrivate{ public void DoNotUse() {} }" > Library\ShouldBePrivate.cs
 dotnet build Library
 
-md MyConsumer
-echo '<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net4</TargetFramework></PropertyGroup><ItemGroup><ProjectReference Include="..\Library\Library.csproj"/></ItemGroup></Project>' > MyConsumer\MyConsumer.csproj
+dotnet new classlib -o MyConsumer
+dotnet add .\MyConsumer\MyConsumer.csproj reference Library\Library.csproj
 echo "public class NaughtyConsumer{ public void Foo() { new ShouldBePrivate().DoNotUse(); } }" > MyConsumer\NaughtyConsumer.cs
 dotnet build MyConsumer
 
@@ -41,7 +40,7 @@ NetDoc.exe `
   --referencedFile Library\Bin\Debug\net4\Library.dll `
   --outDir LibraryTests\ContractAssertions
 ```
-The above example will create a `MyConsumerContractAssertions` class which documents the usage of the class `ShouldBePrivate`:
+The above example will create a `MyConsumerContractAssertions` class which documents the sneaky usage of the class `ShouldBePrivate`:
 ```c#
     private void UsedByMyConsumer()
     {
