@@ -37,7 +37,7 @@ namespace NetDoc
 
             foreach (var repoPath in consumers)
             {
-                var repoName = Path.GetFileName(repoPath);
+                var repoName = Path.GetFileName(repoPath).Replace("-", "");
                 var assemblies =
                     AssembliesInFolder(repoPath ?? ".", exclude.Concat(consumed.Select(Path.GetDirectoryName))).ToList();
                 Console.WriteLine("Generating assertions for {0} assemblies in {1}...", assemblies.Count, repoName);
@@ -92,7 +92,9 @@ internal abstract class {referencing}ContractAssertions
             {
                 var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
                     .Where(call => TargetsReferencedAssembly(call, referencedTypes));
-                var assemblyName = Path.GetFileNameWithoutExtension(assembly).Replace(".", "");
+                var assemblyName = Path.GetFileNameWithoutExtension(assembly)
+                    .Replace(".", "")
+                    .Replace("-", "");
                 foreach (var x in contract.ProcessCalls(assemblyName, calls))
                 {
                     writer.WriteLine($"    {x}");
