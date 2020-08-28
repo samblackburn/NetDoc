@@ -1,4 +1,5 @@
 ﻿using NetDoc;
+using NetDoc.Utils;
 using NUnit.Framework;
 
 namespace Tests

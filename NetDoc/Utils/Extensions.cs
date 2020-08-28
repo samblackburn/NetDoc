@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace NetDoc
+namespace NetDoc.Utils
 {
     public static class Extensions
     {

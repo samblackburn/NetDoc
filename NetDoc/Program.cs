@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using rcx_parse_cli;
+using NetDoc.CommandLineParser;
+using NetDoc.Utils;
 
 namespace NetDoc
 {

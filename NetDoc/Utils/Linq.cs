@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace NetDoc
+namespace NetDoc.Utils
 {
     internal static class Linq
     {

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 
-namespace NetDoc
+namespace NetDoc.Utils
 {
     internal class FileNameOnlyComparer : IEqualityComparer<string?>
     {

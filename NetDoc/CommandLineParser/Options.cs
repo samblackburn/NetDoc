@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace rcx_parse_cli
+namespace NetDoc.CommandLineParser
 {
     /// <summary>
     /// This is a bit weird, but similar to CommandLineParser we treat --help/--version

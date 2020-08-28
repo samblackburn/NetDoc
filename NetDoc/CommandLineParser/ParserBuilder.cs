@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace rcx_parse_cli
+namespace NetDoc.CommandLineParser
 {
     public class ParserBuilder
     {

@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace rcx_parse_cli
+namespace NetDoc.CommandLineParser
 {
     public class CustomParserAttribute : Attribute
     {

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace rcx_parse_cli
+namespace NetDoc.CommandLineParser
 {
     public class CallbackParser
     {
