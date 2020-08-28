@@ -5,7 +5,7 @@ using Mono.Cecil;
 
 namespace NetDoc
 {
-    public class ContractClassWriter
+    public static class ContractClassWriter
     {
         public static void CreateContractAssertions(TextWriter writer, string referencing, IEnumerable<string> referenced, IEnumerable<string> assemblies)
         {
@@ -72,7 +72,7 @@ namespace NetDoc
             "Command",
         };
 
-        public string UtilsSource => @"// ReSharper disable UnusedMember.Local
+        public static string UtilsSource => @"// ReSharper disable UnusedMember.Local
 // ReSharper disable InconsistentNaming
 // ReSharper disable once UnusedType.Global
 

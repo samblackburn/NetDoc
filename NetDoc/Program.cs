@@ -35,7 +35,7 @@ namespace NetDoc
             }
 
             var utilsFile = Path.Combine(assertionsOut, "ContractAssertionUtils.cs");
-            File.WriteAllText(utilsFile, new ContractClassWriter().UtilsSource);
+            File.WriteAllText(utilsFile, ContractClassWriter.UtilsSource);
 
             foreach (var repoPath in consumers)
             {

@@ -19,7 +19,7 @@ namespace Tests.TestFramework
             using var writer = new StringWriter();
             ContractClassWriter.CreateContractAssertions(writer, "", new[] {referencedDll}, new[] {referencingDll});
             Console.WriteLine(writer.ToString());
-            ClrAssemblyCompiler.CompileDlls(writer + new ContractClassWriter().UtilsSource, referenced);
+            ClrAssemblyCompiler.CompileDlls(writer + ContractClassWriter.UtilsSource, referenced);
             StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString(),
                 "We should have created a method to contain the assertions for this assembly");
             return writer.ToString();
