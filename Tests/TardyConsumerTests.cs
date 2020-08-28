@@ -22,6 +22,7 @@ namespace Tests
 
             var newAssertion = UpdatedContractAssertionShouldCompile(referencing, oldReferenced, newReferenced, commentedAssertion);
             StringAssert.Contains(IgnorancePreserver.AssertionSuppressor, newAssertion, "The new assertion should be commented out");
+            Assert.AreEqual(commentedAssertion, newAssertion, "The new assertion should match the old one, since nothing else in the code has changed");
         }
 
         private string UpdatedContractAssertionShouldCompile(string referencing, string oldReferenced, string newReferenced, string oldContractAssertion)
