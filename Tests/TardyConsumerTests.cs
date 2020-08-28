@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Linq;
 using NetDoc;
 using NUnit.Framework;
 using Tests.TestFramework;
@@ -9,8 +8,6 @@ namespace Tests
 {
     class TardyConsumerTests : TestMethods
     {
-        private const string AssertionSuppressor = "//IGNORE ";
-
         [Test]
         public void PreviouslyIgnoredAssertionsRemainCommentedOut()
         {
@@ -24,7 +21,7 @@ namespace Tests
             var commentedAssertion = oldContractAssertion.Replace("    Create", "    //IGNORE Create");
 
             var newAssertion = UpdatedContractAssertionShouldCompile(referencing, oldReferenced, newReferenced, commentedAssertion);
-            StringAssert.Contains(AssertionSuppressor, newAssertion, "The new assertion should be commented out");
+            StringAssert.Contains(IgnorancePreserver.AssertionSuppressor, newAssertion, "The new assertion should be commented out");
         }
 
         private string UpdatedContractAssertionShouldCompile(string referencing, string oldReferenced, string newReferenced, string oldContractAssertion)
@@ -35,33 +32,13 @@ namespace Tests
             var newlyGeneratedAssertions = writer.ToString();
 
             using var writer2 = new StringWriter();
-            PreserveIgnoredAssertions(oldContractAssertion, newlyGeneratedAssertions, writer2);
+            IgnorancePreserver.PreserveIgnoredAssertions(oldContractAssertion, newlyGeneratedAssertions, writer2);
             Console.WriteLine("*** Commented out assertion:");
             Console.WriteLine(writer2.ToString());
             ClrAssemblyCompiler.CompileDlls(writer2.ToString(), newReferenced);
             StringAssert.Contains("private void UsedByTestAssembly()", writer2.ToString(),
                 "We should have created a method to contain the assertions for this assembly");
             return writer2.ToString();
-        }
-
-        private static void PreserveIgnoredAssertions(string oldContractAssertion, string newlyGeneratedAssertions, TextWriter writer)
-        {
-            var commented = oldContractAssertion.Split("\n")
-                .Where(s => s.Contains(AssertionSuppressor))
-                .ToDictionary(KeySelector);
-
-            foreach (var line in newlyGeneratedAssertions.Split("\n"))
-            {
-                var lineOrComment = commented.TryGetValue(KeySelector(line), out var commentedOutLine)
-                    ? commentedOutLine
-                    : line;
-                writer.WriteLine(lineOrComment.TrimEnd('\r'));
-            }
-        }
-
-        private static string KeySelector(string s)
-        {
-            return s.Replace(AssertionSuppressor, "").Trim('\r', '\t', ' ');
         }
     }
 }
