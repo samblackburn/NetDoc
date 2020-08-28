@@ -32,24 +32,31 @@ namespace Tests
             var (oldReferencedDll, referencingDll) = ClrAssemblyCompiler.CompileDlls(referencing, oldReferenced);
             using var writer = new StringWriter();
             Program.CreateContractAssertions(writer, "", new[] { oldReferencedDll }, new[] { referencingDll });
-            var commented = oldContractAssertion.Split("\n")
-                .Where(s => s.Contains(AssertionSuppressor))
-                .ToDictionary(KeySelector);
+            var newlyGeneratedAssertions = writer.ToString();
 
             using var writer2 = new StringWriter();
-            foreach (var line in writer.ToString().Split("\n"))
-            {
-                var lineOrComment = commented.TryGetValue(KeySelector(line), out var commentedOutLine)
-                    ? commentedOutLine
-                    : line;
-                writer2.WriteLine(lineOrComment.TrimEnd('\r'));
-            }
+            PreserveIgnoredAssertions(oldContractAssertion, newlyGeneratedAssertions, writer2);
             Console.WriteLine("*** Commented out assertion:");
             Console.WriteLine(writer2.ToString());
             ClrAssemblyCompiler.CompileDlls(writer2.ToString(), newReferenced);
             StringAssert.Contains("private void UsedByTestAssembly()", writer2.ToString(),
                 "We should have created a method to contain the assertions for this assembly");
             return writer2.ToString();
+        }
+
+        private static void PreserveIgnoredAssertions(string oldContractAssertion, string newlyGeneratedAssertions, TextWriter writer)
+        {
+            var commented = oldContractAssertion.Split("\n")
+                .Where(s => s.Contains(AssertionSuppressor))
+                .ToDictionary(KeySelector);
+
+            foreach (var line in newlyGeneratedAssertions.Split("\n"))
+            {
+                var lineOrComment = commented.TryGetValue(KeySelector(line), out var commentedOutLine)
+                    ? commentedOutLine
+                    : line;
+                writer.WriteLine(lineOrComment.TrimEnd('\r'));
+            }
         }
 
         private static string KeySelector(string s)
