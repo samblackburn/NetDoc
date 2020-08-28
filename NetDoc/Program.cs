@@ -46,9 +46,13 @@ namespace NetDoc
                 Console.WriteLine("Generating assertions for {0} assemblies in {1}...", assemblies.Count, repoName);
 
                 Directory.CreateDirectory(assertionsOut);
-                using var outFile = File.Open(Path.Combine(assertionsOut, $"{repoName}.cs"), FileMode.Create);
-                using var writer = new StreamWriter(outFile);
+                var assertionFileName = Path.Combine(assertionsOut, $"{repoName}.cs");
+                var oldContractAssertion = File.Exists(assertionFileName) ? File.ReadAllText(assertionFileName) : "";
+                using var outFile = File.Open(assertionFileName, FileMode.Create);
+                using var writer2 = new StreamWriter(outFile);
+                using var writer = new StringWriter();
                 CreateContractAssertions(writer, repoName, consumed, assemblies);
+                IgnorancePreserver.PreserveIgnoredAssertions(oldContractAssertion, writer.ToString(), writer2);
             }
         }
 
