@@ -28,7 +28,7 @@ namespace Tests
         {
             var (oldReferencedDll, referencingDll) = ClrAssemblyCompiler.CompileDlls(referencing, oldReferenced);
             using var writer = new StringWriter();
-            Program.CreateContractAssertions(writer, "", new[] { oldReferencedDll }, new[] { referencingDll });
+            ContractClassWriter.CreateContractAssertions(writer, "", new[] { oldReferencedDll }, new[] { referencingDll });
             var newlyGeneratedAssertions = writer.ToString();
 
             using var writer2 = new StringWriter();

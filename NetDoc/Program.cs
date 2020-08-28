@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Mono.Cecil;
 using rcx_parse_cli;
 
 namespace NetDoc
@@ -51,7 +50,7 @@ namespace NetDoc
                 using var outFile = File.Open(assertionFileName, FileMode.Create);
                 using var writer2 = new StreamWriter(outFile);
                 using var writer = new StringWriter();
-                CreateContractAssertions(writer, repoName, consumed, assemblies);
+                ContractClassWriter.CreateContractAssertions(writer, repoName, consumed, assemblies);
                 IgnorancePreserver.PreserveIgnoredAssertions(oldContractAssertion, writer.ToString(), writer2);
             }
         }
@@ -66,46 +65,6 @@ namespace NetDoc
             Console.WriteLine("    --outDir          Where to output the.cs files containing the contract");
             Console.WriteLine("                      assertions. This switch should only be used once.");
         }
-
-        public static void CreateContractAssertions(TextWriter writer, string referencing, IEnumerable<string> referenced, IEnumerable<string> assemblies)
-        {
-            var contract = new ContractClassWriter();
-
-            writer.Write(contract.Header(referencing));
-            using var resolver = new DefaultAssemblyResolver();
-            foreach (var r in referenced)
-            {
-                resolver.AddSearchDirectory(Path.GetDirectoryName(r));
-            }
-
-            var assemblyDefinitions = referenced.Select(AssemblyDefinition.ReadAssembly).ToList();
-            var referencedTypes = assemblyDefinitions.SelectMany(d => d.Modules).SelectMany(a => a.Types)
-                .Where(t => t.IsPublic)
-                .Select(x => $"{x.Namespace}::{x.Name}")
-                .Where(x => x != "::<Module>")
-                .ToHashSet();
-            foreach (var assembly in assemblies)
-            {
-                var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
-                    .Where(call => TargetsReferencedAssembly(call, referencedTypes));
-                var assemblyName = Path.GetFileNameWithoutExtension(assembly).ToTitleCase();
-                foreach (var x in contract.ProcessCalls(assemblyName, calls))
-                {
-                    writer.WriteLine($"    {x}");
-                }
-            }
-
-            writer.Write(contract.Footer);
-            writer.Flush();
-
-            foreach (var ad in assemblyDefinitions)
-            {
-                ad.Dispose();
-            }
-        }
-
-        private static bool TargetsReferencedAssembly(Call arg, ICollection<string> candidateTypes) =>
-            candidateTypes.Contains(arg.ContainingTypeName);
 
         private static IEnumerable<string> AssembliesInFolder(string include, IEnumerable<string?> exclude)
         {

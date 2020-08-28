@@ -1,11 +1,51 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Mono.Cecil;
 
 namespace NetDoc
 {
     public class ContractClassWriter
     {
-        public IEnumerable<string> ProcessCalls(string consumerName, IEnumerable<Call> calls)
+        public static void CreateContractAssertions(TextWriter writer, string referencing, IEnumerable<string> referenced, IEnumerable<string> assemblies)
+        {
+            writer.Write(Header(referencing));
+            using var resolver = new DefaultAssemblyResolver();
+            foreach (var r in referenced)
+            {
+                resolver.AddSearchDirectory(Path.GetDirectoryName(r));
+            }
+
+            var assemblyDefinitions = referenced.Select(AssemblyDefinition.ReadAssembly).ToList();
+            var referencedTypes = assemblyDefinitions.SelectMany(d => d.Modules).SelectMany(a => a.Types)
+                .Where(t => t.IsPublic)
+                .Select(x => $"{x.Namespace}::{x.Name}")
+                .Where(x => x != "::<Module>")
+                .ToHashSet();
+            foreach (var assembly in assemblies)
+            {
+                var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
+                    .Where(call => TargetsReferencedAssembly(call, referencedTypes));
+                var assemblyName = Path.GetFileNameWithoutExtension(assembly).ToTitleCase();
+                foreach (var x in ProcessCalls(assemblyName, calls))
+                {
+                    writer.WriteLine($"    {x}");
+                }
+            }
+
+            writer.Write(Footer);
+            writer.Flush();
+
+            foreach (var ad in assemblyDefinitions)
+            {
+                ad.Dispose();
+            }
+        }
+
+        private static bool TargetsReferencedAssembly(Call arg, ICollection<string> candidateTypes) =>
+            candidateTypes.Contains(arg.ContainingTypeName);
+
+        private static IEnumerable<string> ProcessCalls(string consumerName, IEnumerable<Call> calls)
         {
             var relevantCalls = calls
                 .Where(c => !Exclusions.Contains(c.Method))
@@ -45,14 +85,14 @@ internal static class ContractAssertionUtils
 internal class Ref<T> { public T Any = default; }
 ";
 
-        public string Header(string referencingClassName) => $@"using static ContractAssertionUtils;
+        public static string Header(string referencingClassName) => $@"using static ContractAssertionUtils;
 // ReSharper disable RedundantTypeArgumentsOfMethod
 // ReSharper disable once CheckNamespace
 internal abstract class {referencingClassName}ContractAssertions
 {{
 ";
 
-        public string Footer => @"}";
+        public static string Footer => @"}";
 
     }
 }

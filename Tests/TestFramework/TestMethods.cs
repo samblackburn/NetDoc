@@ -17,7 +17,7 @@ namespace Tests.TestFramework
         {
             var (referencedDll, referencingDll) = ClrAssemblyCompiler.CompileDlls(referencing, referenced);
             using var writer = new StringWriter();
-            Program.CreateContractAssertions(writer, "", new[] {referencedDll}, new[] {referencingDll});
+            ContractClassWriter.CreateContractAssertions(writer, "", new[] {referencedDll}, new[] {referencingDll});
             Console.WriteLine(writer.ToString());
             ClrAssemblyCompiler.CompileDlls(writer + new ContractClassWriter().UtilsSource, referenced);
             StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString(),
@@ -29,7 +29,7 @@ namespace Tests.TestFramework
         {
             var (referencedDll, referencingDll) = ClrAssemblyCompiler.CompileDlls(referencing, referenced);
             using var writer = new StringWriter();
-            Program.CreateContractAssertions(writer, "", new[] {referencedDll}, new[] {referencingDll});
+            ContractClassWriter.CreateContractAssertions(writer, "", new[] {referencedDll}, new[] {referencingDll});
             Console.WriteLine(writer.ToString());
             StringAssert.DoesNotContain("private void UsedByTestAssembly()", writer.ToString(),
                 "There shouldn't be a contract assertion");
