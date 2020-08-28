@@ -34,6 +34,7 @@ namespace NetDoc
                 return;
             }
 
+            Directory.CreateDirectory(assertionsOut);
             var utilsFile = Path.Combine(assertionsOut, "ContractAssertionUtils.cs");
             File.WriteAllText(utilsFile, ContractClassWriter.UtilsSource);
 
@@ -44,7 +45,6 @@ namespace NetDoc
                     AssembliesInFolder(repoPath ?? ".", exclude.Concat(consumed.Select(Path.GetDirectoryName))).ToList();
                 Console.WriteLine("Generating assertions for {0} assemblies in {1}...", assemblies.Count, repoName);
 
-                Directory.CreateDirectory(assertionsOut);
                 var assertionFileName = Path.Combine(assertionsOut, $"{repoName}.cs");
                 var oldContractAssertion = File.Exists(assertionFileName) ? File.ReadAllText(assertionFileName) : "";
                 using var outFile = File.Open(assertionFileName, FileMode.Create);
