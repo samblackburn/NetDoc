@@ -31,5 +31,18 @@ namespace NetDoc
             "Binding",
             "Command",
         };
+
+        public string UtilsSource => @"// ReSharper disable UnusedMember.Local
+// ReSharper disable InconsistentNaming
+// ReSharper disable once UnusedType.Global
+
+internal static class ContractAssertionUtils
+{
+    internal static T Create<T>() => default;
+    internal static void CheckReturnType<T>(T param) {}
+}
+
+internal class Ref<T> { public T Any = default; }
+";
     }
 }

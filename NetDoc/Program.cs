@@ -35,6 +35,9 @@ namespace NetDoc
                 return;
             }
 
+            var utilsFile = Path.Combine(assertionsOut, "ContractAssertionUtils.cs");
+            File.WriteAllText(utilsFile, new ContractClassWriter().UtilsSource);
+
             foreach (var repoPath in consumers)
             {
                 var repoName = Path.GetFileName(repoPath).ToTitleCase();
@@ -64,17 +67,11 @@ namespace NetDoc
         {
             var contract = new ContractClassWriter();
 
-            writer.Write($@"// ReSharper disable UnusedMember.Local
+            writer.Write($@"using static ContractAssertionUtils;
 // ReSharper disable RedundantTypeArgumentsOfMethod
-// ReSharper disable InconsistentNaming
 // ReSharper disable once CheckNamespace
-// ReSharper disable once UnusedType.Global
 internal abstract class {referencing}ContractAssertions
 {{
-    protected abstract T Create<T>();
-    protected abstract void CheckReturnType<T>(T param);
-    private class Ref<T> {{ public T Any = default; }}
-
 ");
             using var resolver = new DefaultAssemblyResolver();
             foreach (var r in referenced)
