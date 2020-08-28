@@ -44,5 +44,15 @@ internal static class ContractAssertionUtils
 
 internal class Ref<T> { public T Any = default; }
 ";
+
+        public string Header(string referencingClassName) => $@"using static ContractAssertionUtils;
+// ReSharper disable RedundantTypeArgumentsOfMethod
+// ReSharper disable once CheckNamespace
+internal abstract class {referencingClassName}ContractAssertions
+{{
+";
+
+        public string Footer => @"}";
+
     }
 }

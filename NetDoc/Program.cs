@@ -67,12 +67,7 @@ namespace NetDoc
         {
             var contract = new ContractClassWriter();
 
-            writer.Write($@"using static ContractAssertionUtils;
-// ReSharper disable RedundantTypeArgumentsOfMethod
-// ReSharper disable once CheckNamespace
-internal abstract class {referencing}ContractAssertions
-{{
-");
+            writer.Write(contract.Header(referencing));
             using var resolver = new DefaultAssemblyResolver();
             foreach (var r in referenced)
             {
@@ -96,7 +91,7 @@ internal abstract class {referencing}ContractAssertions
                 }
             }
 
-            writer.Write(@"}");
+            writer.Write(contract.Footer);
             writer.Flush();
 
             foreach (var ad in assemblyDefinitions)
