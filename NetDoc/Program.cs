@@ -35,6 +35,9 @@ namespace NetDoc
                 return;
             }
 
+            var utilsFile = Path.Combine(assertionsOut, "ContractAssertionUtils.cs");
+            File.WriteAllText(utilsFile, new ContractClassWriter().UtilsSource);
+
             foreach (var repoPath in consumers)
             {
                 var repoName = Path.GetFileName(repoPath).ToTitleCase();
@@ -64,18 +67,7 @@ namespace NetDoc
         {
             var contract = new ContractClassWriter();
 
-            writer.Write($@"// ReSharper disable UnusedMember.Local
-// ReSharper disable RedundantTypeArgumentsOfMethod
-// ReSharper disable InconsistentNaming
-// ReSharper disable once CheckNamespace
-// ReSharper disable once UnusedType.Global
-internal abstract class {referencing}ContractAssertions
-{{
-    protected abstract T Create<T>();
-    protected abstract void CheckReturnType<T>(T param);
-    private class Ref<T> {{ public T Any = default; }}
-
-");
+            writer.Write(contract.Header(referencing));
             using var resolver = new DefaultAssemblyResolver();
             foreach (var r in referenced)
             {
@@ -99,7 +91,7 @@ internal abstract class {referencing}ContractAssertions
                 }
             }
 
-            writer.Write(@"}");
+            writer.Write(contract.Footer);
             writer.Flush();
 
             foreach (var ad in assemblyDefinitions)
@@ -123,20 +115,6 @@ internal abstract class {referencing}ContractAssertions
             return allAssemblies.Where(x => !consumedAssemblies.Contains(Path.GetFileName(x)))
                 .OrderBy(Path.GetFileName)
                 .Distinct(new FileNameOnlyComparer());
-        }
-    }
-
-    internal class FileNameOnlyComparer : IEqualityComparer<string?>
-    {
-        public bool Equals(string? left, string? right)
-        {
-            if (left == null) return right == null;
-            return Path.GetFileName(left).Equals(Path.GetFileName(right), StringComparison.OrdinalIgnoreCase);
-        }
-
-        public int GetHashCode(string? obj)
-        {
-            return Path.GetFileName(obj)?.GetHashCode() ?? -1;
         }
     }
 }

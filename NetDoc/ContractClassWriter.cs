@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace NetDoc
 {
-    internal class ContractClassWriter
+    public class ContractClassWriter
     {
         public IEnumerable<string> ProcessCalls(string consumerName, IEnumerable<Call> calls)
         {
@@ -31,5 +31,28 @@ namespace NetDoc
             "Binding",
             "Command",
         };
+
+        public string UtilsSource => @"// ReSharper disable UnusedMember.Local
+// ReSharper disable InconsistentNaming
+// ReSharper disable once UnusedType.Global
+
+internal static class ContractAssertionUtils
+{
+    internal static T Create<T>() => default;
+    internal static void CheckReturnType<T>(T param) {}
+}
+
+internal class Ref<T> { public T Any = default; }
+";
+
+        public string Header(string referencingClassName) => $@"using static ContractAssertionUtils;
+// ReSharper disable RedundantTypeArgumentsOfMethod
+// ReSharper disable once CheckNamespace
+internal abstract class {referencingClassName}ContractAssertions
+{{
+";
+
+        public string Footer => @"}";
+
     }
 }
