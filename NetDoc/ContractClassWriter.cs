@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace NetDoc
 {
-    internal class ContractClassWriter
+    public class ContractClassWriter
     {
         public IEnumerable<string> ProcessCalls(string consumerName, IEnumerable<Call> calls)
         {

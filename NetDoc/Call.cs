@@ -6,7 +6,7 @@ using Mono.Cecil.Cil;
 
 namespace NetDoc
 {
-    internal class Call
+    public class Call
     {
         private readonly MemberReference m_Operand;
 
