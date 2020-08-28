@@ -25,7 +25,7 @@ namespace NetDoc
                 .Where(s => s.Contains(AssertionSuppressor))
                 .ToDictionary(KeySelector);
 
-            foreach (var line in newlyGeneratedAssertions.Split("\n"))
+            foreach (var line in newlyGeneratedAssertions.TrimEnd('\r', '\n').Split("\n"))
             {
                 var lineOrComment = commented.TryGetValue(KeySelector(line), out var commentedOutLine)
                     ? commentedOutLine
