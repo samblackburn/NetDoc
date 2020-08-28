@@ -35,7 +35,7 @@ namespace Tests
             IgnorancePreserver.PreserveIgnoredAssertions(oldContractAssertion, newlyGeneratedAssertions, writer2);
             Console.WriteLine("*** Commented out assertion:");
             Console.WriteLine(writer2.ToString());
-            ClrAssemblyCompiler.CompileDlls(writer2.ToString(), newReferenced);
+            ClrAssemblyCompiler.CompileDlls(writer2 + new ContractClassWriter().UtilsSource, newReferenced);
             StringAssert.Contains("private void UsedByTestAssembly()", writer2.ToString(),
                 "We should have created a method to contain the assertions for this assembly");
             return writer2.ToString();
