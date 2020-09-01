@@ -25,6 +25,23 @@ namespace Tests
             Assert.AreEqual(commentedAssertion, newAssertion, "The new assertion should match the old one, since nothing else in the code has changed");
         }
 
+        [Test]
+        public void AssertionsCanBeIgnoredWithAComment()
+        {
+            var oldReferenced = Class("public void OldMethod() {}", "Consumed");
+            var newReferenced = Class("public void NewMethod() {}", "Consumed");
+
+            var referencing = Class("public void CallsOldMethod() { new Consumed().OldMethod(); }");
+
+            var oldContractAssertion = ContractAssertionShouldCompile(referencing, oldReferenced);
+            //Assert.Throws<AssertionException>(() => ContractAssertionShouldCompile(referencing, newReferenced));
+            var commentedAssertion = oldContractAssertion.Replace("    Create", "    //IGNORE This is disabled with a comment Create");
+
+            var newAssertion = UpdatedContractAssertionShouldCompile(referencing, oldReferenced, newReferenced, commentedAssertion);
+            StringAssert.Contains(IgnorancePreserver.AssertionSuppressor, newAssertion, "The new assertion should be commented out");
+            Assert.AreEqual(commentedAssertion, newAssertion, "The new assertion should match the old one, since nothing else in the code has changed");
+        }
+
         private string UpdatedContractAssertionShouldCompile(string referencing, string oldReferenced, string newReferenced, string oldContractAssertion)
         {
             var (oldReferencedDll, referencingDll) = ClrAssemblyCompiler.CompileDlls(referencing, oldReferenced);
