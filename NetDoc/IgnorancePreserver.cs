@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace NetDoc
@@ -27,16 +28,14 @@ namespace NetDoc
 
             foreach (var line in newlyGeneratedAssertions.TrimEnd('\r', '\n').Split("\n"))
             {
-                var lineOrComment = commented.TryGetValue(KeySelector(line), out var commentedOutLine)
-                    ? commentedOutLine
-                    : line;
+                var lineOrComment = CommentOutIfNeeded(commented, line);
                 writer.WriteLine(lineOrComment.TrimEnd('\r'));
             }
         }
 
-        private static string KeySelector(string s)
-        {
-            return s.Replace(AssertionSuppressor, "").Trim('\r', '\t', ' ');
-        }
+        private static string CommentOutIfNeeded(Dictionary<string, string> commented, string line) =>
+            commented.FirstOrDefault(kvp => kvp.Key.EndsWith(KeySelector(line))).Value ?? line;
+
+        private static string KeySelector(string s) => s.Replace(AssertionSuppressor, "").Trim('\r', '\t', ' ');
     }
 }
