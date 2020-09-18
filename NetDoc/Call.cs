@@ -34,22 +34,24 @@ namespace NetDoc
         {
             get
             {
-                if (IsStatic) return GetTypeName(m_Operand.DeclaringType);
-                return CallToFactory(m_Operand.DeclaringType);
+                if (IsStatic) return GetTypeName(DeclaringType);
+                return CallToFactory(DeclaringType);
             }
         }
+
+        public TypeReference DeclaringType => m_Operand.DeclaringType;
 
         public string ContainingTypeName
         {
             get
             {
-                var topLevelType = m_Operand.DeclaringType;
+                var topLevelType = DeclaringType;
                 while (topLevelType.DeclaringType != null) topLevelType = topLevelType.DeclaringType;
                 return $"{topLevelType.Namespace}::{topLevelType.Name}";
             }
         }
 
-        public string TypeWithGenerics => GetTypeName(m_Operand.DeclaringType);
+        public string TypeWithGenerics => GetTypeName(DeclaringType);
 
         public string Invocation {
             get
@@ -149,7 +151,7 @@ namespace NetDoc
                 return GetTypeName(def.BaseType);
             }
 
-            declaringType ??= m_Operand.DeclaringType as GenericInstanceType;
+            declaringType ??= DeclaringType as GenericInstanceType;
             if (type.Name.StartsWith("!"))
             {
                 var genericParamNumber = int.Parse(type.Name.TrimStart('!'));
@@ -198,7 +200,7 @@ namespace NetDoc
         /// </returns>
         private bool CanSeeFromAssertion(TypeReference type)
         {
-            var referenced = m_Operand.DeclaringType.Scope.Name + ".dll";
+            var referenced = DeclaringType.Scope.Name + ".dll";
             var referencing = m_Operand.Module.Name;
             if (type.Scope.Name == referenced) return true;
             if (type.Scope.Name == referencing) return false;
