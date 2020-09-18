@@ -14,10 +14,12 @@ namespace NetDoc
             {
                 using var referencingAssembly = AssemblyDefinition.ReadAssembly(path, new ReaderParameters{AssemblyResolver = resolver});
 
-                return referencingAssembly.Modules
-                    .SelectMany(a => a.Types)
+                var types = referencingAssembly.Modules
+                    .SelectMany(a => a.Types).ToHashSet();
+                return types
                     .SelectMany(GetAllBodies)
                     .SelectMany(GetAllCalls)
+                    .Where(x => !types.Contains(x.DeclaringType))
                     .ToList();
             }
             catch (BadImageFormatException ex)
