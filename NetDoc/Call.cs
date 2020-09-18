@@ -165,7 +165,16 @@ namespace NetDoc
 
             if (type is GenericParameter ofT && declaringType != null)
             {
-                return GetTypeName(declaringType.GenericArguments[ofT.Position]);
+                var declaringTypeGenericArgument = declaringType.GenericArguments[ofT.Position];
+                if (declaringTypeGenericArgument != type)
+                {
+                    return GetTypeName(declaringTypeGenericArgument);
+                }
+                else
+                {
+                    // Avoid stack overflow
+                    return "object";
+                }
             }
 
             var nameSpace = type.Namespace;
