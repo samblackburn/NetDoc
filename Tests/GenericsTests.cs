@@ -30,5 +30,13 @@ namespace Tests
                 + Class("", "DerivedList : System.Collections.Generic.List<int>");
             ContractAssertionShouldCompile(referencing, referenced);
         }
+
+        [Test]
+        public void GenericCaller()
+        {
+            var referenced = Class("public void Method() {}", "ReferencedClass<T>");
+            var referencing = Class("public void Method(ReferencedClass<T> x) => x.Method();", "ReferencingClass<T>");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
     }
 }
