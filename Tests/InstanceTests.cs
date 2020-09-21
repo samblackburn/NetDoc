@@ -47,7 +47,7 @@ namespace Tests
         }
 
         [Test]
-        public void MethodWithOutParam()
+        public void MethodWithOutParam_Int()
         {
             var referenced = Class("public void Foo(out int bar) {bar = 3;}", "ReferencedClass");
             var referencing = Class("public int Bar(ReferencedClass x) {x.Foo(out var bar); return bar;}", "ReferencingClass");
@@ -55,7 +55,7 @@ namespace Tests
         }
 
         [Test]
-        public void MethodWithOutParam2()
+        public void MethodWithOutParam_Object()
         {
             var referenced = Class("public void Foo(out object bar) {bar = 3;}", "ReferencedClass");
             var referencing = Class("public object Bar(ReferencedClass x) {x.Foo(out var bar); return bar;}", "ReferencingClass");
