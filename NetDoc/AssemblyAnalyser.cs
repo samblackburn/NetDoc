@@ -18,7 +18,7 @@ namespace NetDoc
                     .SelectMany(a => a.Types)
                     .SelectMany(GetAllBodies)
                     .SelectMany(GetAllCalls)
-                    .Where(x => x.DeclaringType.Resolve().Module.Assembly != referencingAssembly)
+                    .Where(x => x.CallIsOutside(referencingAssembly))
                     .ToList();
             }
             catch (BadImageFormatException ex)
