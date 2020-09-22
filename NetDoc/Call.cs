@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -40,7 +39,7 @@ namespace NetDoc
             }
         }
 
-        private TypeReference DeclaringType => m_Operand.DeclaringType;
+        public TypeReference DeclaringType => m_Operand.DeclaringType;
 
         public string ContainingTypeName
         {
@@ -216,23 +215,6 @@ namespace NetDoc
             if (type.Scope.Name == referencing) return false;
             if (type.Scope.Name == "mscorlib") return true;
             throw new NotImplementedException();
-        }
-
-        /// <returns>
-        /// false if the call targets a class/method in the given assembly
-        /// true if the call targets a different assembly
-        /// true if the call targets an assembly that could not be found
-        /// </returns>
-        public bool CallIsOutside(AssemblyDefinition referencingAssembly)
-        {
-            try
-            {
-                return DeclaringType.Resolve().Module.Assembly != referencingAssembly;
-            }
-            catch (AssemblyResolutionException)
-            {
-                return true;
-            }
         }
     }
 }

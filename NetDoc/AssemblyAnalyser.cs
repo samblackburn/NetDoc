@@ -14,11 +14,12 @@ namespace NetDoc
             {
                 using var referencingAssembly = AssemblyDefinition.ReadAssembly(path, new ReaderParameters{AssemblyResolver = resolver});
 
-                return referencingAssembly.Modules
-                    .SelectMany(a => a.Types)
+                var types = referencingAssembly.Modules
+                    .SelectMany(a => a.Types).ToHashSet();
+                return types
                     .SelectMany(GetAllBodies)
                     .SelectMany(GetAllCalls)
-                    .Where(x => x.CallIsOutside(referencingAssembly))
+                    .Where(x => !types.Contains(DeclaringType(x)))
                     .ToList();
             }
             catch (BadImageFormatException ex)
@@ -26,6 +27,20 @@ namespace NetDoc
                 Console.WriteLine($"{ex.Message}: {path}");
                 return new Call[0];
             }
+        }
+
+        /// <summary>
+        /// For nested classes, returns the outer class
+        /// </summary>
+        private static TypeReference DeclaringType(Call call)
+        {
+            var dt = call.DeclaringType;
+            while (dt.DeclaringType != null)
+            {
+                dt = dt.DeclaringType;
+            }
+
+            return dt;
         }
 
         private static IEnumerable<Call> GetAllCalls(MethodDefinition definition)
