@@ -15,6 +15,15 @@ namespace Tests
         }
 
         [Test]
+        public void ParameterizedFactoryMethod()
+        {
+            var referenced = Class("public T Foo() => default;", "ReferencedClass<T>");
+            var referencing = Class("public OnlyInReferenced Bar(ReferencedClass<OnlyInReferenced> x) {return x.Foo();}", "ReferencingClass")
+                              + Class("", "OnlyInReferenced");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
         public void AssertionMethod()
         {
             var referenced = Class("public void Foo(T param) {}", "ReferencedClass<T>");
