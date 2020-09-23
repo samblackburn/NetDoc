@@ -156,9 +156,17 @@ namespace NetDoc
             {
                 var genericParamNumber = int.Parse(type.Name.TrimStart('!'));
                 if (declaringType != null)
+                {
                     type = declaringType.GenericArguments[genericParamNumber];
+                    if (!CanSeeFromAssertion(type))
+                    {
+                        return "object";
+                    }
+                }
                 else
+                {
                     return "object";
+                }
             }
 
             var className = type.Name.Split('`')[0];
