@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Mono.Cecil;
@@ -25,12 +26,20 @@ namespace NetDoc
                 .ToHashSet();
             foreach (var assembly in assemblies)
             {
-                var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
-                    .Where(call => TargetsReferencedAssembly(call, referencedTypes));
-                var assemblyName = Path.GetFileNameWithoutExtension(assembly).ToTitleCase();
-                foreach (var x in ProcessCalls(assemblyName, calls))
+                try
                 {
-                    writer.WriteLine($"    {x}");
+                    var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
+                        .Where(call => TargetsReferencedAssembly(call, referencedTypes));
+                    var assemblyName = Path.GetFileNameWithoutExtension(assembly).ToTitleCase();
+                    foreach (var x in ProcessCalls(assemblyName, calls))
+                    {
+                        writer.WriteLine($"    {x}");
+                    }
+                }
+                catch
+                {
+                    Console.Error.WriteLine($"Referencing assembly: {assembly}");
+                    throw;
                 }
             }
 

@@ -53,49 +53,67 @@ namespace NetDoc
 
         public string TypeWithGenerics => GetTypeName(DeclaringType);
 
-        public string Invocation {
+        public string Invocation
+        {
             get
             {
-                if (FieldReference != null)
+                try
                 {
-                    return AssignToRandomVariable(FieldReference.FieldType, $"{ClassOrInstance}.{FieldReference.Name}");
+                    return BuildInvocation();
                 }
-
-                var parameters = string.Join(", ", Parameters(MethodReference!.Resolve()?.Parameters ?? MethodReference.Parameters));
-                var indexerParameters = string.Join(", ", Parameters(MethodReference.Resolve()?.Parameters.SkipLast() ?? MethodReference.Parameters.SkipLast()));
-
-                if (m_Operand.Name == ".ctor")
+                catch
                 {
-                    return AssignToRandomVariable(MethodReference.DeclaringType, $"new {TypeWithGenerics}({parameters})");
+                    Console.Error.WriteLine($"Call being processed: {m_Operand}");
+                    throw;
                 }
-
-                if (m_Operand.Name == "get_Item")
-                {
-                    return AssignToRandomVariable(MethodReference.ReturnType,$"{ClassOrInstance}[{parameters}]");
-                }
-
-                if (m_Operand.Name == "set_Item")
-                {
-                    return $"{ClassOrInstance}[{indexerParameters}] = {CallToFactory(MethodReference.Parameters.Last().ParameterType)};";
-                }
-
-                if (m_Operand.Name.StartsWith("get_"))
-                {
-                    return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}.{Method}");
-                }
-
-                if (m_Operand.Name.StartsWith("set_"))
-                {
-                    return $"{ClassOrInstance}.{Method} = {CallToFactory(MethodReference.Parameters.First().ParameterType)};";
-                }
-
-                if (MethodReference.ReturnType.FullName == "System.Void")
-                {
-                    return $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
-                }
-
-                return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}.{m_Operand.Name}{GenericParams()}({parameters})");
             }
+        }
+
+        private string BuildInvocation()
+        {
+            if (FieldReference != null)
+            {
+                return AssignToRandomVariable(FieldReference.FieldType, $"{ClassOrInstance}.{FieldReference.Name}");
+            }
+
+            var parameters =
+                string.Join(", ", Parameters(MethodReference!.Resolve()?.Parameters ?? MethodReference.Parameters));
+            var indexerParameters = string.Join(", ",
+                Parameters(MethodReference.Resolve()?.Parameters.SkipLast() ?? MethodReference.Parameters.SkipLast()));
+
+            if (m_Operand.Name == ".ctor")
+            {
+                return AssignToRandomVariable(MethodReference.DeclaringType, $"new {TypeWithGenerics}({parameters})");
+            }
+
+            if (m_Operand.Name == "get_Item")
+            {
+                return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}[{parameters}]");
+            }
+
+            if (m_Operand.Name == "set_Item")
+            {
+                return
+                    $"{ClassOrInstance}[{indexerParameters}] = {CallToFactory(MethodReference.Parameters.Last().ParameterType)};";
+            }
+
+            if (m_Operand.Name.StartsWith("get_"))
+            {
+                return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}.{Method}");
+            }
+
+            if (m_Operand.Name.StartsWith("set_"))
+            {
+                return $"{ClassOrInstance}.{Method} = {CallToFactory(MethodReference.Parameters.First().ParameterType)};";
+            }
+
+            if (MethodReference.ReturnType.FullName == "System.Void")
+            {
+                return $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
+            }
+
+            return AssignToRandomVariable(MethodReference.ReturnType,
+                $"{ClassOrInstance}.{m_Operand.Name}{GenericParams()}({parameters})");
         }
 
         private string GenericParams()
