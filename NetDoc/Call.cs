@@ -235,11 +235,12 @@ namespace NetDoc
         /// </returns>
         private bool CanSeeFromAssertion(TypeReference type)
         {
-            var referenced = DeclaringType.Scope.Name + ".dll";
-            var referencing = m_Operand.Module.Name;
-            if (type.Scope.Name == referenced) return true;
-            if (type.Scope.Name == referencing) return false;
-            if (type.Scope.Name == "mscorlib") return true;
+            var referenced = DeclaringType.Scope.Name.Replace(".dll", "");
+            var referencing = m_Operand.Module.Name.Replace(".dll", "");
+            var candidate = type.Scope.Name.Replace(".dll", "");
+            if (candidate == referenced) return true;
+            if (candidate == referencing) return false;
+            if (candidate == "mscorlib") return true;
             throw new NotImplementedException();
         }
     }
