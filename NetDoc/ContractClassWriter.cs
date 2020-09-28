@@ -11,44 +11,50 @@ namespace NetDoc
     {
         public static void CreateContractAssertions(TextWriter writer, string referencing, IEnumerable<string> referenced, IEnumerable<string> assemblies)
         {
-            writer.Write(Header(referencing));
-            using var resolver = new DefaultAssemblyResolver();
-            foreach (var r in referenced)
-            {
-                resolver.AddSearchDirectory(Path.GetDirectoryName(r));
-            }
-
             var assemblyDefinitions = referenced.Select(AssemblyDefinition.ReadAssembly).ToList();
-            var referencedTypes = assemblyDefinitions.SelectMany(d => d.Modules).SelectMany(a => a.Types)
-                .Where(t => t.IsPublic)
-                .Select(x => $"{x.Namespace}::{x.Name}")
-                .Where(x => x != "::<Module>")
-                .ToHashSet();
-            foreach (var assembly in assemblies)
+            try
             {
-                try
+                writer.Write(Header(referencing));
+                using var resolver = new DefaultAssemblyResolver();
+                foreach (var r in referenced)
                 {
-                    var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
-                        .Where(call => TargetsReferencedAssembly(call, referencedTypes));
-                    var assemblyName = Path.GetFileNameWithoutExtension(assembly).ToTitleCase();
-                    foreach (var x in ProcessCalls(assemblyName, calls))
+                    resolver.AddSearchDirectory(Path.GetDirectoryName(r));
+                }
+
+                var referencedTypes = assemblyDefinitions.SelectMany(d => d.Modules).SelectMany(a => a.Types)
+                    .Where(t => t.IsPublic)
+                    .Select(x => $"{x.Namespace}::{x.Name}")
+                    .Where(x => x != "::<Module>")
+                    .ToHashSet();
+                foreach (var assembly in assemblies)
+                {
+                    try
                     {
-                        writer.WriteLine($"    {x}");
+                        var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
+                            .Where(call => TargetsReferencedAssembly(call, referencedTypes));
+                        var assemblyName = Path.GetFileNameWithoutExtension(assembly).ToTitleCase();
+                        foreach (var x in ProcessCalls(assemblyName, calls))
+                        {
+                            writer.WriteLine($"    {x}");
+                        }
+                    }
+                    catch
+                    {
+                        Console.Error.WriteLine($"Referencing assembly: {assembly}");
+                        throw;
                     }
                 }
-                catch
-                {
-                    Console.Error.WriteLine($"Referencing assembly: {assembly}");
-                    throw;
-                }
+
+                writer.Write(Footer);
             }
-
-            writer.Write(Footer);
-            writer.Flush();
-
-            foreach (var ad in assemblyDefinitions)
+            finally
             {
-                ad.Dispose();
+                writer.Flush();
+
+                foreach (var ad in assemblyDefinitions)
+                {
+                    ad.Dispose();
+                }
             }
         }
 
