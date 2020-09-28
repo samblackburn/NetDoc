@@ -75,7 +75,7 @@ namespace Tests.TestFramework
             return BaseReferenceAssemblies[frameworkVersion].Select(r => Path.Combine(path, r));
         }
 
-        private static string CompileDll(string tempDir, NetFrameworkVersion frameworkVersion, string assemblyName, string sourceCode, string? referencedDll = null)
+        public static string CompileDll(string tempDir, NetFrameworkVersion frameworkVersion, string assemblyName, string sourceCode, params string[] referencedDlls)
         {
             var outputDll = Path.Combine(tempDir, $"{assemblyName}.dll");
             var sourcePath = Path.Combine(tempDir, $"code{assemblyName}.cs");
@@ -108,7 +108,7 @@ namespace Tests.TestFramework
                 arguments.Append('"');
             }
 
-            if (referencedDll != null)
+            foreach (var referencedDll in referencedDlls)
             {
                 arguments.Append(" /reference:\"");
                 arguments.Append(referencedDll);
