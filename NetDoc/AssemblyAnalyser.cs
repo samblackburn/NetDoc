@@ -8,7 +8,14 @@ namespace NetDoc
 {
     internal class AssemblyAnalyser
     {
-        internal static IEnumerable<Call> AnalyseAssembly(string path, IAssemblyResolver resolver)
+        public AssemblyAnalyser(IEnumerable<string> referencedDlls)
+        {
+            ReferencedDlls = referencedDlls;
+        }
+
+        private IEnumerable<string> ReferencedDlls { get; }
+
+        internal IEnumerable<Call> AnalyseAssembly(string path, IAssemblyResolver resolver)
         {
             try
             {
@@ -43,12 +50,12 @@ namespace NetDoc
             return dt;
         }
 
-        private static IEnumerable<Call> GetAllCalls(MethodDefinition definition)
+        private IEnumerable<Call> GetAllCalls(MethodDefinition definition)
         {
             if (definition?.Body == null) yield break;
             foreach (var instruction in definition.Body.Instructions.Where(IsCall).Where(x => !IsBaseClass(x, definition)))
             {
-                yield return new Call(instruction);
+                yield return new Call(instruction, ReferencedDlls);
             }
         }
 

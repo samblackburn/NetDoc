@@ -10,9 +10,11 @@ namespace NetDoc
     public class Call
     {
         private readonly MemberReference m_Operand;
+        private IEnumerable<string> ReferencedDlls { get; }
 
-        public Call(Instruction instruction)
+        public Call(Instruction instruction, IEnumerable<string> referencedDlls)
         {
+            ReferencedDlls = referencedDlls;
             m_Operand = (MemberReference) instruction.Operand;
             if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Stfld)
             {
@@ -229,16 +231,15 @@ namespace NetDoc
         }
 
         /// <returns>
-        /// True if the type is in the referenced dll
+        /// True if the type is in the list of referenced dlls given to NetDoc
         /// True if the type is in the .NET Framework
         /// False if the type is in the referencing dll
         /// </returns>
         private bool CanSeeFromAssertion(TypeReference type)
         {
-            var referenced = DeclaringType.Scope.Name.Replace(".dll", "");
             var referencing = m_Operand.Module.Name.Replace(".dll", "");
             var candidate = type.Scope.Name.Replace(".dll", "");
-            if (candidate == referenced) return true;
+            if (ReferencedDlls.Contains(candidate)) return true;
             if (candidate == referencing) return false;
             if (candidate == "mscorlib") return true;
             throw new NotImplementedException();

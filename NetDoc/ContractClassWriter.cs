@@ -30,7 +30,8 @@ namespace NetDoc
                 {
                     try
                     {
-                        var calls = AssemblyAnalyser.AnalyseAssembly(assembly, resolver)
+                        var referencedDlls = assemblyDefinitions.Select(a => a.Name.Name).ToHashSet();
+                        var calls = new AssemblyAnalyser(referencedDlls).AnalyseAssembly(assembly, resolver)
                             .Where(call => TargetsReferencedAssembly(call, referencedTypes));
                         var assemblyName = Path.GetFileNameWithoutExtension(assembly).ToTitleCase();
                         foreach (var x in ProcessCalls(assemblyName, calls))
