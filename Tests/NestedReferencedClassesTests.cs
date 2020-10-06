@@ -4,7 +4,7 @@ using Tests.TestFramework;
 namespace Tests
 {
     [TestFixture]
-    class NestedClassesTests : TestMethods
+    class NestedReferencedClassesTests : TestMethods
     {
         [Test]
         public void Constructor()

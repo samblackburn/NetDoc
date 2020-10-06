@@ -22,7 +22,8 @@ namespace NetDoc
                 using var referencingAssembly = AssemblyDefinition.ReadAssembly(path, new ReaderParameters{AssemblyResolver = resolver});
 
                 var types = referencingAssembly.Modules
-                    .SelectMany(a => a.Types).ToHashSet();
+                    .SelectMany(a => a.Types)
+                    .SelectMany(FlattenNestedTypes).ToHashSet();
                 return types
                     .SelectMany(GetAllBodies)
                     .SelectMany(GetAllCalls)
@@ -35,6 +36,9 @@ namespace NetDoc
                 return new Call[0];
             }
         }
+
+        private IEnumerable<TypeDefinition> FlattenNestedTypes(TypeDefinition type) =>
+            new[] {type}.Concat(type.NestedTypes.SelectMany(FlattenNestedTypes));
 
         /// <summary>
         /// For nested classes, returns the outer class
