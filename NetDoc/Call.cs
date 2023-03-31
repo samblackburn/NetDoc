@@ -204,6 +204,11 @@ namespace NetDoc
                     return "object";
                 }
             }
+            
+            if (type is GenericParameter)
+            {
+                return "object";
+            }
 
             var nameSpace = type.Namespace;
 

@@ -15,6 +15,14 @@ namespace Tests
         }
 
         [Test]
+        public void ImplicitTypeArgument()
+        {
+            var referenced = Class(@"public void Method<T>(T param) {}", "ReferencedClass");
+            var referencing = Class("public void Method() => new ReferencedClass().Method(2);");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
         public void ParameterizedFactoryMethod()
         {
             var referenced = Class("public T Foo() => default;", "ReferencedClass<T>");
