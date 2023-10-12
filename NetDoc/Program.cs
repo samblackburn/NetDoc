@@ -24,7 +24,7 @@ namespace NetDoc
                 .SetUi(Console.WriteLine, Environment.Exit)
                 .Add(new Option("--referencingDir", s => consumers.Add(s!)))
                 .Add(new Option("--referencedFile", s => consumed.Add(s!)))
-                .Add(new Option("--excludeDir", s => exclude.Add(s!)))
+                .Add(new Option("--excludeDir", s => exclude.Add(Path.GetDirectoryName(s)!)))
                 .Add(new Option("--outDir", x => assertionsOut = x))
                 .Add(new Option("--help", x => help = true))
                 .Build().Parse(args);
@@ -42,8 +42,7 @@ namespace NetDoc
             foreach (var repoPath in consumers)
             {
                 var repoName = Path.GetFileName(repoPath).ToTitleCase();
-                var assemblies =
-                    AssembliesInFolder(repoPath ?? ".", exclude.Concat(consumed.Select(Path.GetDirectoryName))).ToList();
+                var assemblies = AssembliesInFolder(repoPath, exclude.Concat(consumed)).ToList();
                 Console.WriteLine("Generating assertions for {0} assemblies in {1}...", assemblies.Count, repoName);
 
                 var assertionFileName = Path.Combine(assertionsOut, $"{repoName}.cs");
@@ -67,7 +66,7 @@ namespace NetDoc
             Console.WriteLine("                      assertions. This switch should only be used once.");
         }
 
-        private static IEnumerable<string> AssembliesInFolder(string include, IEnumerable<string?> exclude)
+        private static IEnumerable<string> AssembliesInFolder(string include, IEnumerable<string> exclude)
         {
             var allAssemblies = Directory.EnumerateFiles(include, "*.dll", SearchOption.AllDirectories)
                 .Concat(Directory.EnumerateFiles(include, "*.exe", SearchOption.AllDirectories))
