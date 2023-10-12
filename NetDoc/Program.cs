@@ -23,8 +23,8 @@ namespace NetDoc
                     Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown")
                 .SetUi(Console.WriteLine, Environment.Exit)
                 .Add(new Option("--referencingDir", s => consumers.Add(s!)))
-                .Add(new Option("--referencedFile", s => consumed.Add(s!)))
-                .Add(new Option("--excludeDir", s => exclude.Add(Path.GetDirectoryName(s)!)))
+                .Add(new Option("--referencedFile", s => consumed.Add(Path.GetDirectoryName(s)!)))
+                .Add(new Option("--excludeDir", s => exclude.Add(s!)))
                 .Add(new Option("--outDir", x => assertionsOut = x))
                 .Add(new Option("--help", x => help = true))
                 .Build().Parse(args);
