@@ -23,7 +23,7 @@ namespace NetDoc
                     Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "unknown")
                 .SetUi(Console.WriteLine, Environment.Exit)
                 .Add(new Option("--referencingDir", s => consumers.Add(s!)))
-                .Add(new Option("--referencedFile", s => consumed.Add(Path.GetDirectoryName(s)!)))
+                .Add(new Option("--referencedFile", s => consumed.Add(s!)))
                 .Add(new Option("--excludeDir", s => exclude.Add(s!)))
                 .Add(new Option("--outDir", x => assertionsOut = x))
                 .Add(new Option("--help", x => help = true))
@@ -42,7 +42,8 @@ namespace NetDoc
             foreach (var repoPath in consumers)
             {
                 var repoName = Path.GetFileName(repoPath).ToTitleCase();
-                var assemblies = AssembliesInFolder(repoPath, exclude.Concat(consumed)).ToList();
+                var assemblies = AssembliesInFolder(repoPath, exclude.Concat(consumed.Select(s =>
+                    Path.GetDirectoryName(s)!))).ToList();
                 Console.WriteLine("Generating assertions for {0} assemblies in {1}...", assemblies.Count, repoName);
 
                 var assertionFileName = Path.Combine(assertionsOut, $"{repoName}.cs");
