@@ -27,18 +27,18 @@ Switch             | Description
 
 ```powershell
 dotnet new classlib -o Library
-echo "public class ShouldBePrivate{ public void DoNotUse() {} }" > Library\ShouldBePrivate.cs
+echo "public class ShouldBePrivate{ public void DoNotUse() {} }" > Library/ShouldBePrivate.cs
 dotnet build Library
 
 dotnet new classlib -o MyConsumer
-dotnet add .\MyConsumer\MyConsumer.csproj reference Library\Library.csproj
-echo "public class NaughtyConsumer{ public void Foo() { new ShouldBePrivate().DoNotUse(); } }" > MyConsumer\NaughtyConsumer.cs
+dotnet add ./MyConsumer/MyConsumer.csproj reference Library/Library.csproj
+echo "public class NaughtyConsumer{ public void Foo() { new ShouldBePrivate().DoNotUse(); } }" > MyConsumer/NaughtyConsumer.cs
 dotnet build MyConsumer
 
 NetDoc.exe `
   --referencingDir MyConsumer `
-  --referencedFile Library\Bin\Debug\net4\Library.dll `
-  --outDir LibraryTests\ContractAssertions
+  --referencedFile Library/Bin/Debug/net4/Library.dll `
+  --outDir LibraryTests/ContractAssertions
 ```
 The above example will create a `MyConsumerContractAssertions` class which documents the sneaky usage of the class `ShouldBePrivate`:
 ```c#
