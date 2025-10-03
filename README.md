@@ -25,22 +25,34 @@ Switch             | Description
 
 ## Example usage
 
+Let's suppose you have a library with a test project, and a consumer that we imagine is on the other side of a NuGet boundary:
+
 ```bash
 dotnet new classlib -o Library
 echo "public class ShouldBePrivate{ public void DoNotUse() {} }" > Library/ShouldBePrivate.cs
-dotnet build Library
 
 dotnet new classlib -o MyConsumer
 dotnet add ./MyConsumer/MyConsumer.csproj reference Library/Library.csproj
 echo "public class NaughtyConsumer{ public void Foo() { new ShouldBePrivate().DoNotUse(); } }" > MyConsumer/NaughtyConsumer.cs
-dotnet build MyConsumer
 
+dotnet new classlib -o LibraryTests
+dotnet add ./LibraryTests/LibraryTests.csproj reference Library/Library.csproj
+
+rm */Class1.cs
+
+dotnet build Library
+dotnet build LibraryTests
+dotnet test LibraryTests
+dotnet build MyConsumer
+```
+If we make a breaking change (e.g. `dotnet format Library --severity info` would make a method static), we won't know that we're breaking anyone. However, NetDoc can help:
+```
 NetDoc.exe \
   --referencingDir MyConsumer \
   --referencedFile Library/Bin/Debug/net9.0/Library.dll \
   --outDir LibraryTests/ContractAssertions
 ```
-The above example will create a `MyConsumerContractAssertions` class which documents the sneaky usage of the class `ShouldBePrivate`:
+The above command will create a `MyConsumerContractAssertions` class which documents the sneaky usage of the class `ShouldBePrivate`:
 ```c#
     private void UsedByMyConsumer()
     {
@@ -48,7 +60,9 @@ The above example will create a `MyConsumerContractAssertions` class which docum
         Create<ShouldBePrivate>().DoNotUse();
     }
 ```
-If this class is compiled as part of the library's build, maintainers will immediately see that `ShouldBePrivate` is in use and should not be deleted without notifying the maintainers of the consuming codebase.
+This means `Library` maintainers will immediately see that `ShouldBePrivate` is in use and its API should not be changed without notifying the maintainers of the consuming codebase.
+
+Once all usages are represented inside a solution, refactorings like removing unused code become a lot easier. I wrote a [`RemoveUnused`](https://github.com/samblackburn/RemoveUnused) routine for this purpose.
 
 ## Build/test
 
