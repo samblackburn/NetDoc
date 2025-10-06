@@ -54,14 +54,7 @@ namespace Tests
             var referenced = Class("public T Obj1 => default;", "Mapping<T> where T : class, IMappedObject")
                              + Class("", "IMappedObject", notAClass: "interface");
             var referencing = Class("""
-                                    void HasCustomComparisonMappings<T>(System.Collections.Generic.IEnumerable<Mapping<T>> mappings)
-                                                where T : class, IMappedObject
-                                            {
-                                                foreach (var mapping in mappings)
-                                                {
-                                                    if (mapping.Obj1 != null) {}
-                                                }
-                                            }
+                                    string Blah<T>(Mapping<T> mapping) where T : class, IMappedObject => mapping.Obj1.ToString();
                                     """);
             ContractAssertionShouldCompile(referencing, referenced);
         }
