@@ -51,11 +51,9 @@ namespace Tests
         [Test]
         public void ReferencedTypeConstraint2()
         {
-            var referenced = Class("public T Obj1 => default;", "Mapping<T> where T : class, IMappedObject")
-                             + Class("", "IMappedObject", notAClass: "interface");
-            var referencing = Class("""
-                                    string Blah<T>(Mapping<T> mapping) where T : class, IMappedObject => mapping.Obj1.ToString();
-                                    """);
+            var referenced = Class("public T Obj1() => default;", "Mapping<T> where T : MappedObject")
+                             + Class("", "MappedObject");
+            var referencing = Class("void Blah<T>(Mapping<T> mapping) where T : MappedObject => mapping.Obj1();");
             ContractAssertionShouldCompile(referencing, referenced);
         }
 
