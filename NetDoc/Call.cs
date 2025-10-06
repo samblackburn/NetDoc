@@ -198,6 +198,10 @@ namespace NetDoc
                 {
                     return GetTypeName(declaringTypeGenericArgument);
                 }
+                else if ((declaringTypeGenericArgument as GenericParameter)?.Constraints.FirstOrDefault() is {} constraint)
+                {
+                    return GetTypeName(constraint.ConstraintType);
+                }
                 else
                 {
                     // Avoid stack overflow
