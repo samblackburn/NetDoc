@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace Tests.TestFramework
 {
-    abstract class TestMethods
+    class TestMethods
     {
         /// <summary>
         /// Generates a contract assertion and asserts that it compiles
