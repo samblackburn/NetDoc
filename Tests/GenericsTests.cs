@@ -40,11 +40,29 @@ namespace Tests
         }
 
         [Test]
-        public void TypeConstraint()
+        public void FrameworkTypeConstraint()
         {
             var referenced = Class("public void Foo(T param) {}", "ReferencedClass<T, U> where T : System.Collections.Generic.IEnumerable<U>");
             var referencing = Class("public void Bar(ReferencedClass<DerivedList, int> x) {x.Foo(new DerivedList());}", "ReferencingClass")
                 + Class("", "DerivedList : System.Collections.Generic.List<int>");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+        
+        [Test]
+        public void ReferencedTypeConstraint2()
+        {
+            var referenced = Class("public T Obj1 => default;", "Mapping<T> where T : class, IMappedObject")
+                             + Class("", "IMappedObject", notAClass: "interface");
+            var referencing = Class("""
+                                    void HasCustomComparisonMappings<T>(System.Collections.Generic.IEnumerable<Mapping<T>> mappings)
+                                                where T : class, IMappedObject
+                                            {
+                                                foreach (var mapping in mappings)
+                                                {
+                                                    if (mapping.Obj1 != null) {}
+                                                }
+                                            }
+                                    """);
             ContractAssertionShouldCompile(referencing, referenced);
         }
 
