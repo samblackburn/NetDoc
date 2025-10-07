@@ -59,6 +59,10 @@ namespace NetDoc
             if (definition?.Body == null) yield break;
             foreach (var instruction in definition.Body.Instructions.Where(IsCall).Where(x => !IsBaseClass(x, definition)))
             {
+                //if ((instruction.Operand as MemberReference)?.Name == "get_Obj1")
+                //{
+                //    Console.WriteLine("Badger: " + definition);
+                //}
                 yield return new Call(instruction, ReferencedDlls);
             }
         }

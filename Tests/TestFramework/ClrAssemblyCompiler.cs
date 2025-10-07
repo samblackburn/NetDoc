@@ -161,7 +161,7 @@ using System.Reflection;
                 {
                     Console.WriteLine(stdout);
                 }
-                Assert.That(exitCode, Is.Zero, "Failed to compile CLR assembly (exit code non-zero)");
+                Assert.That(exitCode, Is.Zero, "Failed to compile CLR assembly (exit code non-zero). Source code:\n{0}", sourceCode);
             }
 
             return outputDll;

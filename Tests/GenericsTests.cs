@@ -47,6 +47,14 @@ namespace Tests
                 + Class("", "DerivedList : System.Collections.Generic.List<int>");
             ContractAssertionShouldCompile(referencing, referenced);
         }
+        
+        [Test]
+        public void TypeConstraintAlsoInReferencingMethod()
+        {
+            var referenced = Class("public T Foo() => default;", "ReferencedClass<T> where T : System.IDisposable");
+            var referencing = Class("void Blah<T>(ReferencedClass<T> x) where T : System.IDisposable => x.Foo();");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
 
         [Test]
         public void GenericCaller()

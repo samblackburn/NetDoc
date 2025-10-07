@@ -5,7 +5,7 @@ using NUnit.Framework;
 
 namespace Tests.TestFramework
 {
-    abstract class TestMethods
+    class TestMethods
     {
         /// <summary>
         /// Generates a contract assertion and asserts that it compiles
@@ -36,12 +36,14 @@ namespace Tests.TestFramework
         }
 
         [TestCase("int x;", "Class2", null, ExpectedResult = "public class Class2 {int x;}")]
+        [TestCase("", "INterface2", null, "interface", ExpectedResult = "public interface INterface2 {}")]
         [TestCase("int x;", "Class2", "ns", ExpectedResult = "namespace ns {public class Class2 {int x;}}")]
-        public static string Class(string contents, string className = "Class1", string? ns = "Name.Space")
+        public static string Class(string contents, string className = "Class1", string? ns = "Name.Space",
+            string notAClass = "class")
         {
             return string.IsNullOrEmpty(ns)
-                ? $"public class {className} {{{contents}}}"
-                : $"namespace {ns} {{{Class(contents, className, null)}}}";
+                ? $"public {notAClass} {className} {{{contents}}}"
+                : $"namespace {ns} {{{Class(contents, className, null, notAClass)}}}";
         }
 
         [TearDown]
