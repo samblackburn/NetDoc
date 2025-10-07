@@ -78,13 +78,19 @@ namespace NetDoc
                 return AssignToRandomVariable(FieldReference.FieldType, $"{ClassOrInstance}.{FieldReference.Name}");
             }
 
-            var parameters =
-                string.Join(", ", Parameters(MethodReference!.Resolve()?.Parameters ?? MethodReference.Parameters));
+            var parameterDefs = MethodReference!.Resolve()?.Parameters ?? MethodReference.Parameters;
+            var parameters = string.Join(", ", Parameters(parameterDefs));
             var indexerParameters = string.Join(", ",
                 Parameters(MethodReference.Resolve()?.Parameters.SkipLast() ?? MethodReference.Parameters.SkipLast()));
 
             if (m_Operand.Name == ".ctor")
             {
+                if (parameterDefs.Select(x => x.Name).SequenceEqual(["object", "method"]))
+                {
+                    // not sure how to infer the delegate signature
+                    return AssignToRandomVariable(MethodReference.DeclaringType, "_ => default");
+                }
+                
                 return AssignToRandomVariable(MethodReference.DeclaringType, $"new {TypeWithGenerics}({parameters})");
             }
 
