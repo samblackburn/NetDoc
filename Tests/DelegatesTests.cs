@@ -14,7 +14,7 @@ internal class DelegatesTests : TestMethods
         ContractAssertionShouldCompile(referencing, referenced);
     }
 
-    [Test, Ignore("Not sure how to infer the delegate's signature")]
+    [Test]
     public void DelegateWithTwoArguments()
     {
         var referenced = "public delegate bool MyDelegate(int i, int j);";
@@ -22,7 +22,7 @@ internal class DelegatesTests : TestMethods
         ContractAssertionShouldCompile(referencing, referenced);
     }
 
-    [Test, Ignore("Not sure how to infer the delegate's signature")]
+    [Test]
     public void VoidDelegate()
     {
         var referenced = "public delegate void MyDelegate(int i);";

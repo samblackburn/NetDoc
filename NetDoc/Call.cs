@@ -92,10 +92,13 @@ namespace NetDoc
 
             if (m_Operand.Name == ".ctor")
             {
-                if (parameterDefs.Select(x => x.Name).SequenceEqual(["object", "method"]))
+                if (m_Delegate != null)
                 {
-                    // not sure how to infer the delegate signature
-                    return AssignToRandomVariable(MethodReference.DeclaringType, "_ => default");
+                    var args = string.Join(", ", m_Delegate.Parameters.Select((p, i) => $"{GetTypeName(p.ParameterType)} arg{i}"));
+                    var expression = m_Delegate.ReturnType.FullName == "System.Void"
+                        ? "{}"
+                        : CallToFactory(m_Delegate.ReturnType);
+                    return AssignToRandomVariable(MethodReference.DeclaringType, $"({args}) => {expression}");
                 }
                 
                 return AssignToRandomVariable(MethodReference.DeclaringType, $"new {TypeWithGenerics}({parameters})");
