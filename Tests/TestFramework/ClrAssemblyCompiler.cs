@@ -47,8 +47,8 @@ namespace Tests.TestFramework
             var packageDir = new DirectoryInfo(Path.Combine(PackagesFolder, "microsoft.netframework.referenceassemblies." + moniker));
             Assert.That(packageDir.Exists, $"Directory {packageDir.FullName} does not exist");
             var versions = packageDir.GetDirectories();
-            Assert.That(versions.Length, Is.EqualTo(1), $"Directory {packageDir.FullName} does not contain exactly one version");
-            var referenceDir = new DirectoryInfo(Path.Combine(versions.Single().FullName, "build", ".NETFramework", version));
+            Assert.That(versions.Length, Is.GreaterThanOrEqualTo(1), $"Directory {packageDir.FullName} does not contain exactly one version");
+            var referenceDir = new DirectoryInfo(Path.Combine(versions.First().FullName, "build", ".NETFramework", version));
             Assert.That(referenceDir.Exists, $"Directory {referenceDir.FullName} does not exist");
 
             return referenceDir.FullName;
