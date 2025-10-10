@@ -10,13 +10,20 @@ namespace NetDoc
     public class Call
     {
         private readonly MemberReference m_Operand;
+        private readonly MethodReference? m_Delegate;
         private IEnumerable<string> ReferencedDlls { get; }
 
         public Call(Instruction instruction, IEnumerable<string> referencedDlls)
         {
             ReferencedDlls = referencedDlls;
             m_Operand = (MemberReference) instruction.Operand;
-            if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Stfld)
+            if (instruction.OpCode == OpCodes.Newobj &&
+                MethodReference?.Parameters.Select(x => x.ParameterType.Name).SequenceEqual([nameof(Object), nameof(IntPtr)]) == true &&
+                instruction.Previous.OpCode == OpCodes.Ldftn)
+            {
+                m_Delegate = (MethodReference)instruction.Previous.Operand;
+            }
+            else if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Stfld)
             {
                 IsStatic = false;
             }
