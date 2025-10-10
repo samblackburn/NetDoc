@@ -10,11 +10,11 @@ internal class DelegatesTests : TestMethods
     public void DelegateWithOneArgument()
     {
         var referenced = "public delegate bool MyDelegate(int i);";
-        var referencing = Class("MyDelegate MakeDelegate() => i => i > 3;", "ReferencingClass");
+        var referencing = Class("MyDelegate MakeDelegate() => Foo; bool Foo(int i) => i > 3;", "ReferencingClass");
         ContractAssertionShouldCompile(referencing, referenced);
     }
 
-    [Test, Ignore("Not sure how to infer the delegate's signature")]
+    [Test]
     public void DelegateWithTwoArguments()
     {
         var referenced = "public delegate bool MyDelegate(int i, int j);";
@@ -22,11 +22,19 @@ internal class DelegatesTests : TestMethods
         ContractAssertionShouldCompile(referencing, referenced);
     }
 
-    [Test, Ignore("Not sure how to infer the delegate's signature")]
+    [Test]
     public void VoidDelegate()
     {
         var referenced = "public delegate void MyDelegate(int i);";
         var referencing = Class("MyDelegate MakeDelegate() => i => {};", "ReferencingClass");
+        ContractAssertionShouldCompile(referencing, referenced);
+    }
+    
+    [Test]
+    public void ReusedDelegate()
+    {
+        var referenced = "public delegate bool MyDelegate(int i);";
+        var referencing = Class("MyDelegate[] MakeDelegates() => new MyDelegate[] {Foo, Foo}; bool Foo(int i) => i > 3;", "ReferencingClass");
         ContractAssertionShouldCompile(referencing, referenced);
     }
 }

@@ -10,13 +10,20 @@ namespace NetDoc
     public class Call
     {
         private readonly MemberReference m_Operand;
+        private readonly MethodReference? m_Delegate;
         private IEnumerable<string> ReferencedDlls { get; }
 
         public Call(Instruction instruction, IEnumerable<string> referencedDlls)
         {
             ReferencedDlls = referencedDlls;
             m_Operand = (MemberReference) instruction.Operand;
-            if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Stfld)
+            if (instruction.OpCode == OpCodes.Newobj &&
+                MethodReference?.Parameters.Select(x => x.ParameterType.Name).SequenceEqual([nameof(Object), nameof(IntPtr)]) == true &&
+                instruction.Previous.OpCode == OpCodes.Ldftn)
+            {
+                m_Delegate = (MethodReference)instruction.Previous.Operand;
+            }
+            else if (instruction.OpCode == OpCodes.Ldfld || instruction.OpCode == OpCodes.Stfld)
             {
                 IsStatic = false;
             }
@@ -85,10 +92,13 @@ namespace NetDoc
 
             if (m_Operand.Name == ".ctor")
             {
-                if (parameterDefs.Select(x => x.Name).SequenceEqual(["object", "method"]))
+                if (m_Delegate != null)
                 {
-                    // not sure how to infer the delegate signature
-                    return AssignToRandomVariable(MethodReference.DeclaringType, "_ => default");
+                    var args = string.Join(", ", m_Delegate.Parameters.Select((p, i) => $"{GetTypeName(p.ParameterType)} arg{i}"));
+                    var expression = m_Delegate.ReturnType.FullName == "System.Void"
+                        ? "{}"
+                        : CallToFactory(m_Delegate.ReturnType);
+                    return AssignToRandomVariable(MethodReference.DeclaringType, $"({args}) => {expression}");
                 }
                 
                 return AssignToRandomVariable(MethodReference.DeclaringType, $"new {TypeWithGenerics}({parameters})");
