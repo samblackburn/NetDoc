@@ -10,7 +10,7 @@ internal class DelegatesTests : TestMethods
     public void DelegateWithOneArgument()
     {
         var referenced = "public delegate bool MyDelegate(int i);";
-        var referencing = Class("MyDelegate MakeDelegate() => i => i > 3;", "ReferencingClass");
+        var referencing = Class("MyDelegate MakeDelegate() => Foo; bool Foo(int i) => i > 3;", "ReferencingClass");
         ContractAssertionShouldCompile(referencing, referenced);
     }
 
