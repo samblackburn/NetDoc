@@ -2,6 +2,7 @@
 using System.IO;
 using NetDoc;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Tests.TestFramework;
 
 namespace Tests
