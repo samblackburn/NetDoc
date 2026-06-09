@@ -24,7 +24,7 @@ namespace Tests.TestFramework
             return (referencedDll, referencingDll);
         }
 
-        private static string Net4Compiler { get; } = Path.Combine(PackagesFolder, "microsoft.net.compilers", "3.6.0", "tools", "csc.exe");
+        private static string Net4Compiler { get; } = Path.Combine(PackagesFolder, "microsoft.net.compilers", "4.2.0", "tools", "csc.exe");
 
         private static string GetReferenceAssemblyPath(NetFrameworkVersion frameworkVersion)
         {
