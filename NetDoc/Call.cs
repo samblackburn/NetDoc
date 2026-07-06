@@ -180,26 +180,34 @@ namespace NetDoc
             return name;
         }
 
-        private string GetTypeName(TypeReference type, GenericInstanceType? declaringType = null)
+        private string GetTypeName(TypeReference type, GenericInstanceType? declaringType = null, GenericInstanceMethod? methodContext = null)
         {
+            declaringType ??= DeclaringType as GenericInstanceType;
+            methodContext ??= MethodReference as GenericInstanceMethod;
+
             if (type is TypeDefinition def && !CanSeeFromAssertion(type) && CanSeeFromAssertion(def.BaseType))
             {
-                return GetTypeName(def.BaseType);
+                return GetTypeName(def.BaseType, declaringType, methodContext);
             }
 
-            declaringType ??= DeclaringType as GenericInstanceType;
             if (type.Name.StartsWith("!"))
             {
+                var isMethodParameter = type.Name.StartsWith("!!");
                 var genericParamNumber = int.Parse(type.Name.TrimStart('!'));
-                if (declaringType != null)
+                if (isMethodParameter && methodContext != null)
+                {
+                    type = methodContext.GenericArguments[genericParamNumber];
+                }
+                else if (!isMethodParameter && declaringType != null)
                 {
                     type = declaringType.GenericArguments[genericParamNumber];
-                    if (!CanSeeFromAssertion(type))
-                    {
-                        return "object";
-                    }
                 }
                 else
+                {
+                    return "object";
+                }
+
+                if (!CanSeeFromAssertion(type))
                 {
                     return "object";
                 }
@@ -207,26 +215,30 @@ namespace NetDoc
 
             var className = type.Name.Split('`')[0];
 
-            if (type is GenericParameter ofT && declaringType != null)
+            if (type is GenericParameter ofT)
             {
-                var declaringTypeGenericArgument = declaringType.GenericArguments[ofT.Position];
-                if (declaringTypeGenericArgument != type)
+                if (ofT.Type == GenericParameterType.Method && methodContext != null)
                 {
-                    return GetTypeName(declaringTypeGenericArgument);
+                    var methodGenericArgument = methodContext.GenericArguments[ofT.Position];
+                    if (methodGenericArgument != type && CanSeeFromAssertion(methodGenericArgument))
+                    {
+                        return GetTypeName(methodGenericArgument, declaringType, methodContext);
+                    }
                 }
-                else if ((declaringTypeGenericArgument as GenericParameter)?.Constraints.FirstOrDefault() is {} constraint)
+                else if (declaringType != null)
                 {
-                    return GetTypeName(constraint.ConstraintType);
+                    var declaringTypeGenericArgument = declaringType.GenericArguments[ofT.Position];
+                    if (declaringTypeGenericArgument != type)
+                    {
+                        return GetTypeName(declaringTypeGenericArgument, declaringType, methodContext);
+                    }
+                    else if ((declaringTypeGenericArgument as GenericParameter)?.Constraints.FirstOrDefault() is {} constraint)
+                    {
+                        return GetTypeName(constraint.ConstraintType, declaringType, methodContext);
+                    }
                 }
-                else
-                {
-                    // Avoid stack overflow
-                    return "object";
-                }
-            }
-            
-            if (type is GenericParameter)
-            {
+
+                // Avoid stack overflow
                 return "object";
             }
 
@@ -234,11 +246,11 @@ namespace NetDoc
 
             if (type.DeclaringType != null)
             {
-                nameSpace = GetTypeName(type.DeclaringType);
+                nameSpace = GetTypeName(type.DeclaringType, declaringType, methodContext);
             }
 
             var generics = type is GenericInstanceType git
-                ? $"<{String.Join(", ", git.GenericArguments.Select(x => GetTypeName(x)))}>"
+                ? $"<{String.Join(", ", git.GenericArguments.Select(x => GetTypeName(x, declaringType, methodContext)))}>"
                 : "";
             if (!string.IsNullOrEmpty(nameSpace)) nameSpace += ".";
             var fullName = $"{nameSpace}{className}{generics}".TrimEnd('&');

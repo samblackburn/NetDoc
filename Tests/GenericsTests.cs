@@ -63,5 +63,14 @@ namespace Tests
             var referencing = Class("public void Method(ReferencedClass<T> x) => x.Method();", "ReferencingClass<T>");
             ContractAssertionShouldCompile(referencing, referenced);
         }
+
+        [Test]
+        public void GenericParameterNestedInsideFuncParameter()
+        {
+            var referenced = Class("public static string GetOptionsPayload<T>(System.Func<T, bool> predicate) => default;", "ReferencedClass")
+                              + Class("", "OnlyInReferenced", "Name.Space", "struct");
+            var referencing = Class("public static void Bar() { ReferencedClass.GetOptionsPayload<OnlyInReferenced>(x => true); }", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
     }
 }
