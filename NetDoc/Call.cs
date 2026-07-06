@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
@@ -11,12 +11,12 @@ namespace NetDoc
     {
         private readonly MemberReference m_Operand;
         private readonly MethodReference? m_Delegate;
-        private IEnumerable<string> ReferencedDlls { get; }
+        private readonly TypeNameResolver m_TypeNames;
 
         public Call(Instruction instruction, IEnumerable<string> referencedDlls)
         {
-            ReferencedDlls = referencedDlls;
             m_Operand = (MemberReference) instruction.Operand;
+            m_TypeNames = new TypeNameResolver(m_Operand.Module.Name, referencedDlls);
             if (instruction.OpCode == OpCodes.Newobj &&
                 MethodReference?.Parameters.Select(x => x.ParameterType.Name).SequenceEqual([nameof(Object), nameof(IntPtr)]) == true &&
                 instruction.Previous.OpCode == OpCodes.Ldftn)
@@ -82,7 +82,7 @@ namespace NetDoc
         {
             if (FieldReference != null)
             {
-                return AssignToRandomVariable(FieldReference.FieldType, $"{ClassOrInstance}.{FieldReference.Name}");
+                return BuildFieldAccess();
             }
 
             var parameterDefs = MethodReference!.Resolve()?.Parameters ?? MethodReference.Parameters;
@@ -92,47 +92,77 @@ namespace NetDoc
 
             if (m_Operand.Name == ".ctor")
             {
-                if (m_Delegate != null)
-                {
-                    var args = string.Join(", ", m_Delegate.Parameters.Select((p, i) => $"{GetTypeName(p.ParameterType)} arg{i}"));
-                    var expression = m_Delegate.ReturnType.FullName == "System.Void"
-                        ? "{}"
-                        : CallToFactory(m_Delegate.ReturnType);
-                    return AssignToRandomVariable(MethodReference.DeclaringType, $"({args}) => {expression}");
-                }
-                
-                return AssignToRandomVariable(MethodReference.DeclaringType, $"new {TypeWithGenerics}({parameters})");
+                return BuildConstructorCall(parameters);
             }
 
             if (m_Operand.Name == "get_Item")
             {
-                return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}[{parameters}]");
+                return BuildIndexerGet(parameters);
             }
 
             if (m_Operand.Name == "set_Item")
             {
-                return
-                    $"{ClassOrInstance}[{indexerParameters}] = {CallToFactory(MethodReference.Parameters.Last().ParameterType)};";
+                return BuildIndexerSet(indexerParameters);
             }
 
             if (m_Operand.Name.StartsWith("get_"))
             {
-                return AssignToRandomVariable(MethodReference.ReturnType, $"{ClassOrInstance}.{Method}");
+                return BuildPropertyGet();
             }
 
             if (m_Operand.Name.StartsWith("set_"))
             {
-                return $"{ClassOrInstance}.{Method} = {CallToFactory(MethodReference.Parameters.First().ParameterType)};";
+                return BuildPropertySet();
             }
 
             if (MethodReference.ReturnType.FullName == "System.Void")
             {
-                return $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
+                return BuildVoidMethodCall(parameters);
             }
 
-            return AssignToRandomVariable(MethodReference.ReturnType,
-                $"{ClassOrInstance}.{m_Operand.Name}{GenericParams()}({parameters})");
+            return BuildValueMethodCall(parameters);
         }
+
+        private string BuildFieldAccess() =>
+            AssignToRandomVariable(FieldReference!.FieldType, $"{ClassOrInstance}.{FieldReference.Name}");
+
+        private string BuildConstructorCall(string parameters)
+        {
+            if (m_Delegate != null)
+            {
+                return BuildDelegateConstructor();
+            }
+
+            return AssignToRandomVariable(MethodReference!.DeclaringType, $"new {TypeWithGenerics}({parameters})");
+        }
+
+        private string BuildDelegateConstructor()
+        {
+            var args = string.Join(", ", m_Delegate!.Parameters.Select((p, i) => $"{GetTypeName(p.ParameterType)} arg{i}"));
+            var expression = m_Delegate.ReturnType.FullName == "System.Void"
+                ? "{}"
+                : CallToFactory(m_Delegate.ReturnType);
+            return AssignToRandomVariable(MethodReference!.DeclaringType, $"({args}) => {expression}");
+        }
+
+        private string BuildIndexerGet(string parameters) =>
+            AssignToRandomVariable(MethodReference!.ReturnType, $"{ClassOrInstance}[{parameters}]");
+
+        private string BuildIndexerSet(string indexerParameters) =>
+            $"{ClassOrInstance}[{indexerParameters}] = {CallToFactory(MethodReference!.Parameters.Last().ParameterType)};";
+
+        private string BuildPropertyGet() =>
+            AssignToRandomVariable(MethodReference!.ReturnType, $"{ClassOrInstance}.{Method}");
+
+        private string BuildPropertySet() =>
+            $"{ClassOrInstance}.{Method} = {CallToFactory(MethodReference!.Parameters.First().ParameterType)};";
+
+        private string BuildVoidMethodCall(string parameters) =>
+            $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
+
+        private string BuildValueMethodCall(string parameters) =>
+            AssignToRandomVariable(MethodReference!.ReturnType,
+                $"{ClassOrInstance}.{m_Operand.Name}{GenericParams()}({parameters})");
 
         private string GenericParams()
         {
@@ -180,106 +210,7 @@ namespace NetDoc
             return name;
         }
 
-        private string GetTypeName(TypeReference type, GenericInstanceType? declaringType = null, GenericInstanceMethod? methodContext = null)
-        {
-            declaringType ??= DeclaringType as GenericInstanceType;
-            methodContext ??= MethodReference as GenericInstanceMethod;
-
-            if (type is TypeDefinition def && !CanSeeFromAssertion(type) && CanSeeFromAssertion(def.BaseType))
-            {
-                return GetTypeName(def.BaseType, declaringType, methodContext);
-            }
-
-            if (type.Name.StartsWith("!"))
-            {
-                var isMethodParameter = type.Name.StartsWith("!!");
-                var genericParamNumber = int.Parse(type.Name.TrimStart('!'));
-                if (isMethodParameter && methodContext != null)
-                {
-                    type = methodContext.GenericArguments[genericParamNumber];
-                }
-                else if (!isMethodParameter && declaringType != null)
-                {
-                    type = declaringType.GenericArguments[genericParamNumber];
-                }
-                else
-                {
-                    return "object";
-                }
-
-                if (!CanSeeFromAssertion(type))
-                {
-                    return "object";
-                }
-            }
-
-            var className = type.Name.Split('`')[0];
-
-            if (type is GenericParameter ofT)
-            {
-                if (ofT.Type == GenericParameterType.Method && methodContext != null)
-                {
-                    var methodGenericArgument = methodContext.GenericArguments[ofT.Position];
-                    if (methodGenericArgument != type && CanSeeFromAssertion(methodGenericArgument))
-                    {
-                        return GetTypeName(methodGenericArgument, declaringType, methodContext);
-                    }
-                }
-                else if (declaringType != null)
-                {
-                    var declaringTypeGenericArgument = declaringType.GenericArguments[ofT.Position];
-                    if (declaringTypeGenericArgument != type)
-                    {
-                        return GetTypeName(declaringTypeGenericArgument, declaringType, methodContext);
-                    }
-                    else if ((declaringTypeGenericArgument as GenericParameter)?.Constraints.FirstOrDefault() is {} constraint)
-                    {
-                        return GetTypeName(constraint.ConstraintType, declaringType, methodContext);
-                    }
-                }
-
-                // Avoid stack overflow
-                return "object";
-            }
-
-            var nameSpace = type.Namespace;
-
-            if (type.DeclaringType != null)
-            {
-                nameSpace = GetTypeName(type.DeclaringType, declaringType, methodContext);
-            }
-
-            var generics = type is GenericInstanceType git
-                ? $"<{String.Join(", ", git.GenericArguments.Select(x => GetTypeName(x, declaringType, methodContext)))}>"
-                : "";
-            if (!string.IsNullOrEmpty(nameSpace)) nameSpace += ".";
-            var fullName = $"{nameSpace}{className}{generics}".TrimEnd('&');
-
-            switch (fullName)
-            {
-                case "System.Void": return "void";
-                case "System.String": return "string";
-                case "System.Object": return "object";
-                case "System.Boolean": return "bool";
-                case "System.Int32": return "int";
-                case "System.Int64": return "long";
-                default: return fullName;
-            }
-        }
-
-        /// <returns>
-        /// True if the type is in the list of referenced dlls given to NetDoc
-        /// True if the type is in the .NET Framework
-        /// False if the type is in the referencing dll
-        /// </returns>
-        private bool CanSeeFromAssertion(TypeReference type)
-        {
-            var referencing = m_Operand.Module.Name.Replace(".dll", "");
-            var candidate = type.Scope.Name.Replace(".dll", "");
-            if (ReferencedDlls.Contains(candidate)) return true;
-            if (candidate == referencing) return false;
-            if (candidate == "mscorlib") return true;
-            throw new NotImplementedException();
-        }
+        private string GetTypeName(TypeReference type) =>
+            m_TypeNames.GetTypeName(type, DeclaringType as GenericInstanceType, MethodReference as GenericInstanceMethod);
     }
 }
