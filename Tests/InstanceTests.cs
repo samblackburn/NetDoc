@@ -95,6 +95,28 @@ namespace Tests
         }
 
         [Test]
+        public void InitOnlySetter()
+        {
+            // net45 reference assemblies don't define this type, but `init` accessors require it to exist.
+            const string isExternalInitShim = "namespace System.Runtime.CompilerServices {public static class IsExternalInit {}}";
+
+            var referenced = Class("public int Foo { get; init; }", "ReferencedClass") + isExternalInitShim;
+            var referencing = Class("public ReferencedClass Bar() { return new ReferencedClass { Foo = 3 }; }", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
+        public void InitOnlySetter_ConstructorWithArgs()
+        {
+            // net45 reference assemblies don't define this type, but `init` accessors require it to exist.
+            const string isExternalInitShim = "namespace System.Runtime.CompilerServices {public static class IsExternalInit {}}";
+
+            var referenced = Class("public ReferencedClass(int i) {} public int Foo { get; init; }", "ReferencedClass") + isExternalInitShim;
+            var referencing = Class("public ReferencedClass Bar() { return new ReferencedClass(1) { Foo = 3 }; }", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
         public void IndexerGetter()
         {
             var referenced = Class("public bool this[int x] { get {return true;} set {} }", "ReferencedClass");
