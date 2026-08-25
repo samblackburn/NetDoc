@@ -154,8 +154,25 @@ namespace NetDoc
         private string BuildPropertyGet() =>
             AssignToRandomVariable(MethodReference!.ReturnType, $"{ClassOrInstance}.{Method}");
 
-        private string BuildPropertySet() =>
-            $"{ClassOrInstance}.{Method} = {CallToFactory(MethodReference!.Parameters.First().ParameterType)};";
+        private string BuildPropertySet()
+        {
+            var valueType = MethodReference!.Parameters.First().ParameterType;
+            if (!IsInitOnly)
+            {
+                return $"{ClassOrInstance}.{Method} = {CallToFactory(valueType)};";
+            }
+
+            var ctorParams = DeclaringType.Resolve()?.Methods
+                .Where(m => m.IsConstructor && !m.IsStatic && m.IsPublic)
+                .OrderBy(m => m.Parameters.Count)
+                .FirstOrDefault()?.Parameters ?? Enumerable.Empty<ParameterDefinition>();
+            var ctorArgs = string.Join(", ", Parameters(ctorParams));
+            return AssignToRandomVariable(DeclaringType, $"new {TypeWithGenerics}({ctorArgs}) {{ {Method} = {CallToFactory(valueType)} }}");
+        }
+
+        private bool IsInitOnly =>
+            MethodReference!.ReturnType is RequiredModifierType required &&
+            required.ModifierType.FullName == "System.Runtime.CompilerServices.IsExternalInit";
 
         private string BuildVoidMethodCall(string parameters) =>
             $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
