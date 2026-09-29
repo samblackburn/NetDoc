@@ -18,9 +18,11 @@ namespace NetDoc
 
         public string GetTypeName(TypeReference type, GenericInstanceType? declaringType = null, GenericInstanceMethod? methodContext = null)
         {
-            if (type is TypeDefinition def && !CanSeeFromAssertion(type) && CanSeeFromAssertion(def.BaseType))
+            if (type is TypeDefinition def && !CanSeeFromAssertion(type))
             {
-                return GetTypeName(def.BaseType, declaringType, methodContext);
+                // Interfaces have no base type
+                if (def.BaseType == null) return "object";
+                if (CanSeeFromAssertion(def.BaseType)) return GetTypeName(def.BaseType, declaringType, methodContext);
             }
 
             if (type.Name.StartsWith("!"))
