@@ -26,6 +26,16 @@ namespace Tests
             ContractAssertionShouldCompileWithTwoReferenced(referencing, referenced1, referenced2);
         }
 
+        [Test]
+        public void GenericArgumentFromAnotherReferencingDll()
+        {
+            var sibling = Class("", "SiblingClass");
+            var referenced = Class("public T Foo<T>(System.Func<Wrapper<T>> func) => default;", "ReferencedClass")
+                             + Class("", "Wrapper<T>");
+            var referencing = Class("public SiblingClass Bar(ReferencedClass x) => x.Foo<SiblingClass>(() => null);");
+            ContractAssertionShouldCompileWithSiblingReferencing(referencing, referenced, sibling);
+        }
+
         private static void ContractAssertionShouldBeEmptyWithMissingLibrary(string referencing, string missing)
         {
             var (missingDll, referencingDll) = ClrAssemblyCompiler.CompileDlls(referencing, missing);
@@ -47,6 +57,20 @@ namespace Tests
             Console.WriteLine(writer.ToString());
             ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "TestAssembly",
                 writer + ContractClassWriter.UtilsSource, referencedDll1, referencedDll2);
+            StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString(),
+                "We should have created a method to contain the assertions for this assembly");
+        }
+
+        private static void ContractAssertionShouldCompileWithSiblingReferencing(string referencing, string referenced, string sibling)
+        {
+            var referencedDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "ReferencedAssembly", referenced);
+            var siblingDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "SiblingReferencingAssembly", sibling);
+            var referencingDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "TestAssembly", referencing, referencedDll, siblingDll);
+            using var writer = new StringWriter();
+            ContractClassWriter.CreateContractAssertions(writer, "", new[] {referencedDll}, new[] {referencingDll});
+            Console.WriteLine(writer.ToString());
+            ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "TestAssembly",
+                writer + ContractClassWriter.UtilsSource, referencedDll);
             StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString(),
                 "We should have created a method to contain the assertions for this assembly");
         }
