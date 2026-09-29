@@ -24,6 +24,11 @@ namespace NetDoc
                 if (def.BaseType == null) return "object";
                 if (CanSeeFromAssertion(def.BaseType)) return GetTypeName(def.BaseType, declaringType, methodContext);
             }
+            else if (type is not TypeDefinition && type is not GenericParameter && !type.Name.StartsWith("!") && !CanSeeFromAssertion(type))
+            {
+                // Defined in a dll the assertion doesn't reference, e.g. another dll in the consuming product
+                return "object";
+            }
 
             if (type.Name.StartsWith("!"))
             {
@@ -105,15 +110,15 @@ namespace NetDoc
         /// <returns>
         /// True if the type is in the list of referenced dlls given to NetDoc
         /// True if the type is in the .NET Framework
-        /// False if the type is in the referencing dll
+        /// False if the type is in the referencing dll, or any other dll the assertion doesn't reference
         /// </returns>
         private bool CanSeeFromAssertion(TypeReference type)
         {
             var candidate = type.Scope.Name.Replace(".dll", "");
             if (m_ReferencedDlls.Contains(candidate)) return true;
             if (candidate == m_ReferencingModuleName) return false;
-            if (candidate == "mscorlib") return true;
-            throw new NotImplementedException();
+            if (candidate is "mscorlib" or "netstandard" or "System" || candidate.StartsWith("System.")) return true;
+            return false;
         }
     }
 }
