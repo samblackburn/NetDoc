@@ -72,5 +72,14 @@ namespace Tests
             var referencing = Class("public static void Bar() { ReferencedClass.GetOptionsPayload<OnlyInReferenced>(x => true); }", "ReferencingClass");
             ContractAssertionShouldCompile(referencing, referenced);
         }
+
+        [Test]
+        public void ConstructorParameterGenericOverInterfaceOnlyInReferencing()
+        {
+            var referenced = Class("public Foo(System.Collections.Generic.ISet<T> inner) {}", "Foo<T>");
+            var referencing = Class("public void Bar() { new Foo<IOnlyInReferencing>(new System.Collections.Generic.HashSet<IOnlyInReferencing>()); }", "ReferencingClass")
+                              + Class("", "IOnlyInReferencing", "Name.Space", "interface");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
     }
 }
