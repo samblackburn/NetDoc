@@ -15,6 +15,14 @@ namespace Tests
         }
 
         [Test]
+        public void VoidMethodWithOnlyTypeArgument()
+        {
+            var referenced = Class("public static void Foo<T>() {}", "ReferencedClass");
+            var referencing = Class("public void Bar() => ReferencedClass.Foo<int>();", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
         public void ImplicitTypeArgument()
         {
             var referenced = Class(@"public void Method<T>(T param) {}", "ReferencedClass");
