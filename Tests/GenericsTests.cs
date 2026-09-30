@@ -23,6 +23,16 @@ namespace Tests
         }
 
         [Test]
+        public void TypeArgumentDerivedFromAnotherTypeOnlyInReferencing()
+        {
+            var referenced = Class("public static void Foo<T>(T x) {}", "ReferencedClass");
+            var referencing = Class("public void Bar(OnlyInReferencing x) => ReferencedClass.Foo<OnlyInReferencing>(x);", "ReferencingClass")
+                              + Class("", "OnlyInReferencing : BaseOnlyInReferencing")
+                              + Class("", "BaseOnlyInReferencing");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
         public void ImplicitTypeArgument()
         {
             var referenced = Class(@"public void Method<T>(T param) {}", "ReferencedClass");
