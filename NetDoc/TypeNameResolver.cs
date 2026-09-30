@@ -49,7 +49,10 @@ namespace NetDoc
 
                 if (!CanSeeFromAssertion(type))
                 {
-                    return "object";
+                    // Fall back the same way as the declaring type does, so the two agree
+                    return type is TypeDefinition { BaseType: { } baseType } && CanSeeFromAssertion(baseType)
+                        ? GetTypeName(baseType, declaringType, methodContext)
+                        : "object";
                 }
             }
 
