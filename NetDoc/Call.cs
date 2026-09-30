@@ -187,7 +187,7 @@ namespace NetDoc
             required.ModifierType.FullName == "System.Runtime.CompilerServices.IsExternalInit";
 
         private string BuildVoidMethodCall(string parameters) =>
-            $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
+            $"{ClassOrInstance}.{m_Operand.Name}{GenericParams()}({parameters});";
 
         private string BuildValueMethodCall(string parameters) =>
             AssignToRandomVariable(MethodReference!.ReturnType,
