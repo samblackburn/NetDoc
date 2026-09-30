@@ -108,7 +108,7 @@ namespace NetDoc
         }
 
         /// <returns>
-        /// True if the type is in the list of referenced dlls given to NetDoc
+        /// True if the type is in the list of referenced dlls given to NetDoc, or one of their dependencies
         /// True if the type is in the .NET Framework
         /// False if the type is in the referencing dll, or any other dll the assertion doesn't reference
         /// </returns>

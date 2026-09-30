@@ -30,7 +30,10 @@ namespace NetDoc
                 {
                     try
                     {
-                        var referencedDlls = assemblyDefinitions.Select(a => a.Name.Name).ToHashSet();
+                        // The assertion project can also see the referenced dlls' own dependencies
+                        var referencedDlls = assemblyDefinitions.Select(a => a.Name.Name)
+                            .Concat(assemblyDefinitions.SelectMany(a => a.Modules).SelectMany(m => m.AssemblyReferences).Select(r => r.Name))
+                            .ToHashSet();
                         var calls = new AssemblyAnalyser(referencedDlls).AnalyseAssembly(assembly, resolver)
                             .Where(call => TargetsReferencedAssembly(call, referencedTypes));
                         var assemblyName = Path.GetFileNameWithoutExtension(assembly).ToTitleCase();
