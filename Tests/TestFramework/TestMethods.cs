@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Linq;
 using NetDoc;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -24,6 +25,31 @@ namespace Tests.TestFramework
             StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString(),
                 "We should have created a method to contain the assertions for this assembly");
             return writer.ToString();
+        }
+
+        /// <summary>
+        /// Generates a contract assertion for a consumer that also references another dll, and asserts that it compiles
+        /// </summary>
+        /// <param name="referencing">C# source for the referencing class(es)</param>
+        /// <param name="referenced">C# source for the referenced class(es)</param>
+        /// <param name="other">C# source for a dll the consumer also references</param>
+        /// <param name="referencedDependsOnOther">
+        /// True if the referenced dll depends on the other dll, so the assertion can see it too;
+        /// false if it's only used by the consumer, e.g. another dll in the consuming product
+        /// </param>
+        protected static void ContractAssertionShouldCompileWithOtherDll(string referencing, string referenced, string other, bool referencedDependsOnOther)
+        {
+            var otherDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "OtherAssembly", other);
+            var visibleToAssertion = referencedDependsOnOther ? new[] {otherDll} : new string[0];
+            var referencedDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "ReferencedAssembly", referenced, visibleToAssertion);
+            var referencingDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "TestAssembly", referencing, referencedDll, otherDll);
+            using var writer = new StringWriter();
+            ContractClassWriter.CreateContractAssertions(writer, "", new[] {referencedDll}, new[] {referencingDll});
+            Console.WriteLine(writer.ToString());
+            ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "TestAssembly",
+                writer + ContractClassWriter.UtilsSource, visibleToAssertion.Prepend(referencedDll).ToArray());
+            StringAssert.Contains("private void UsedByTestAssembly()", writer.ToString(),
+                "We should have created a method to contain the assertions for this assembly");
         }
 
         protected static void ContractAssertionShouldBeEmpty(string referencing, string referenced)

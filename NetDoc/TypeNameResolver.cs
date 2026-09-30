@@ -20,9 +20,7 @@ namespace NetDoc
         {
             if (type is TypeDefinition def && !CanSeeFromAssertion(type))
             {
-                // Interfaces have no base type
-                if (def.BaseType == null) return "object";
-                if (CanSeeFromAssertion(def.BaseType)) return GetTypeName(def.BaseType, declaringType, methodContext);
+                if (StandIn(def, declaringType, methodContext) is { } standIn) return standIn;
             }
             else if (type is not TypeDefinition && type is not GenericParameter && !type.Name.StartsWith("!") && !CanSeeFromAssertion(type))
             {
@@ -49,7 +47,8 @@ namespace NetDoc
 
                 if (!CanSeeFromAssertion(type))
                 {
-                    return "object";
+                    // Fall back the same way as the declaring type does, so the two agree
+                    return (type is TypeDefinition invisible ? StandIn(invisible, declaringType, methodContext) : null) ?? "object";
                 }
             }
 
@@ -63,6 +62,10 @@ namespace NetDoc
                     if (methodGenericArgument != type && CanSeeFromAssertion(methodGenericArgument))
                     {
                         return GetTypeName(methodGenericArgument, declaringType, methodContext);
+                    }
+                    if (methodGenericArgument is TypeDefinition invisible && StandIn(invisible, declaringType, methodContext) is { } standIn)
+                    {
+                        return standIn;
                     }
                 }
                 else if (declaringType != null)
@@ -108,7 +111,20 @@ namespace NetDoc
         }
 
         /// <returns>
-        /// True if the type is in the list of referenced dlls given to NetDoc
+        /// The name of a type the assertion can see that can stand in for one it can't, or null if there isn't one
+        /// </returns>
+        private string? StandIn(TypeDefinition invisible, GenericInstanceType? declaringType, GenericInstanceMethod? methodContext)
+        {
+            // Any enum satisfies the same generic constraints (struct, System.Enum) as the consumer's enum
+            if (invisible.IsEnum) return "System.DayOfWeek";
+            // Interfaces have no base type
+            if (invisible.BaseType == null) return "object";
+            if (CanSeeFromAssertion(invisible.BaseType)) return GetTypeName(invisible.BaseType, declaringType, methodContext);
+            return null;
+        }
+
+        /// <returns>
+        /// True if the type is in the list of referenced dlls given to NetDoc, or one of their dependencies
         /// True if the type is in the .NET Framework
         /// False if the type is in the referencing dll, or any other dll the assertion doesn't reference
         /// </returns>

@@ -105,6 +105,11 @@ namespace NetDoc
                 return BuildIndexerSet(indexerParameters);
             }
 
+            if (MethodReference.Resolve() is { } eventAccessor && (eventAccessor.IsAddOn || eventAccessor.IsRemoveOn))
+            {
+                return BuildEventSubscription(eventAccessor.IsAddOn);
+            }
+
             if (m_Operand.Name.StartsWith("get_"))
             {
                 return BuildPropertyGet();
@@ -170,12 +175,19 @@ namespace NetDoc
             return AssignToRandomVariable(DeclaringType, $"new {TypeWithGenerics}({ctorArgs}) {{ {Method} = {CallToFactory(valueType)} }}");
         }
 
+        private string BuildEventSubscription(bool isAdd)
+        {
+            var eventName = m_Operand.Name.Substring(isAdd ? "add_".Length : "remove_".Length);
+            var handlerType = MethodReference!.Parameters.First().ParameterType;
+            return $"{ClassOrInstance}.{eventName} {(isAdd ? "+=" : "-=")} {CallToFactory(handlerType)};";
+        }
+
         private bool IsInitOnly =>
             MethodReference!.ReturnType is RequiredModifierType required &&
             required.ModifierType.FullName == "System.Runtime.CompilerServices.IsExternalInit";
 
         private string BuildVoidMethodCall(string parameters) =>
-            $"{ClassOrInstance}.{m_Operand.Name}({parameters});";
+            $"{ClassOrInstance}.{m_Operand.Name}{GenericParams()}({parameters});";
 
         private string BuildValueMethodCall(string parameters) =>
             AssignToRandomVariable(MethodReference!.ReturnType,

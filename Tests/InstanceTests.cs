@@ -131,5 +131,21 @@ namespace Tests
             var referencing = Class("public void Bar(ReferencedClass x) {x[3] = false;}", "ReferencingClass");
             ContractAssertionShouldCompile(referencing, referenced);
         }
+
+        [Test]
+        public void EventSubscribe()
+        {
+            var referenced = Class("public event System.EventHandler Foo;", "ReferencedClass");
+            var referencing = Class("public void Bar(ReferencedClass x) {x.Foo += (s, e) => {};}", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
+        public void EventUnsubscribe()
+        {
+            var referenced = Class("public event System.EventHandler Foo;", "ReferencedClass");
+            var referencing = Class("public void Bar(ReferencedClass x, System.EventHandler h) {x.Foo -= h;}", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
     }
 }

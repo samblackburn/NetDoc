@@ -15,6 +15,14 @@ namespace Tests
         }
 
         [Test]
+        public void VoidMethodWithOnlyTypeArgument()
+        {
+            var referenced = Class("public static void Foo<T>() {}", "ReferencedClass");
+            var referencing = Class("public void Bar() => ReferencedClass.Foo<int>();", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
         public void ImplicitTypeArgument()
         {
             var referenced = Class(@"public void Method<T>(T param) {}", "ReferencedClass");
@@ -70,6 +78,25 @@ namespace Tests
             var referenced = Class("public static string GetOptionsPayload<T>(System.Func<T, bool> predicate) => default;", "ReferencedClass")
                               + Class("", "OnlyInReferenced", "Name.Space", "struct");
             var referencing = Class("public static void Bar() { ReferencedClass.GetOptionsPayload<OnlyInReferenced>(x => true); }", "ReferencingClass");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
+        public void GenericReturnTypeOverStructOnlyInReferencing()
+        {
+            var referenced = Class("public Wrapper<T> Foo() => null;", "ReferencedClass<T>")
+                             + Class("", "Wrapper<T>");
+            var referencing = Class("public object Bar(ReferencedClass<OnlyInReferencing> x) => x.Foo();", "ReferencingClass")
+                              + Class("", "OnlyInReferencing", "Name.Space", "struct");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
+        public void StructConstrainedGenericMethodOverEnumOnlyInReferencing()
+        {
+            var referenced = Class("public static string Foo<T>(System.Func<T, bool> predicate) where T : struct => default;", "ReferencedClass");
+            var referencing = Class("public static string Bar() => ReferencedClass.Foo<OnlyInReferencing>(x => true);", "ReferencingClass")
+                              + Class("", "OnlyInReferencing", "Name.Space", "enum");
             ContractAssertionShouldCompile(referencing, referenced);
         }
 
