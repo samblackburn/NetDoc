@@ -92,6 +92,15 @@ namespace Tests
         }
 
         [Test]
+        public void StructConstrainedGenericMethodOverEnumOnlyInReferencing()
+        {
+            var referenced = Class("public static string Foo<T>(System.Func<T, bool> predicate) where T : struct => default;", "ReferencedClass");
+            var referencing = Class("public static string Bar() => ReferencedClass.Foo<OnlyInReferencing>(x => true);", "ReferencingClass")
+                              + Class("", "OnlyInReferencing", "Name.Space", "enum");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
         public void ConstructorParameterGenericOverInterfaceOnlyInReferencing()
         {
             var referenced = Class("public Foo(System.Collections.Generic.ISet<T> inner) {}", "Foo<T>");
