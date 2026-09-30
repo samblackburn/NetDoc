@@ -82,6 +82,16 @@ namespace Tests
         }
 
         [Test]
+        public void GenericReturnTypeOverStructOnlyInReferencing()
+        {
+            var referenced = Class("public Wrapper<T> Foo() => null;", "ReferencedClass<T>")
+                             + Class("", "Wrapper<T>");
+            var referencing = Class("public object Bar(ReferencedClass<OnlyInReferencing> x) => x.Foo();", "ReferencingClass")
+                              + Class("", "OnlyInReferencing", "Name.Space", "struct");
+            ContractAssertionShouldCompile(referencing, referenced);
+        }
+
+        [Test]
         public void ConstructorParameterGenericOverInterfaceOnlyInReferencing()
         {
             var referenced = Class("public Foo(System.Collections.Generic.ISet<T> inner) {}", "Foo<T>");
