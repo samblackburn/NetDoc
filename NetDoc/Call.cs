@@ -105,6 +105,11 @@ namespace NetDoc
                 return BuildIndexerSet(indexerParameters);
             }
 
+            if (MethodReference.Resolve() is { } eventAccessor && (eventAccessor.IsAddOn || eventAccessor.IsRemoveOn))
+            {
+                return BuildEventSubscription(eventAccessor.IsAddOn);
+            }
+
             if (m_Operand.Name.StartsWith("get_"))
             {
                 return BuildPropertyGet();
@@ -168,6 +173,13 @@ namespace NetDoc
                 .FirstOrDefault()?.Parameters ?? Enumerable.Empty<ParameterDefinition>();
             var ctorArgs = string.Join(", ", Parameters(ctorParams));
             return AssignToRandomVariable(DeclaringType, $"new {TypeWithGenerics}({ctorArgs}) {{ {Method} = {CallToFactory(valueType)} }}");
+        }
+
+        private string BuildEventSubscription(bool isAdd)
+        {
+            var eventName = m_Operand.Name.Substring(isAdd ? "add_".Length : "remove_".Length);
+            var handlerType = MethodReference!.Parameters.First().ParameterType;
+            return $"{ClassOrInstance}.{eventName} {(isAdd ? "+=" : "-=")} {CallToFactory(handlerType)};";
         }
 
         private bool IsInitOnly =>
