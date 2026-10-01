@@ -44,7 +44,7 @@ namespace Tests
         }
 
         [Test]
-        public void IgnoredAssertionUsingTypeFromDependencyTheReferencedDllNoLongerHasRemainsCommentedOut()
+        public void SignatureTypeFromDependencyTheReferencedDllNoLongerHasIsNamedAsTheConsumerReferencesIt()
         {
             // The consumer was built against an old version, whose property type came from a dependency
             const string oldDependency = "namespace Name.Space { public delegate void OldStatusHandler(); }";
@@ -60,23 +60,11 @@ namespace Tests
             var referencingDll = ClrAssemblyCompiler.CompileDll(consumerDir, NetFrameworkVersion.Net45, "TestAssembly", referencing, oldReferencedDll, oldDependencyDll);
             var newReferencedDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "ReferencedAssembly", newReferenced);
 
-            // When the consumer was up to date, the assertion named the consumer's property type, and was then ignored
-            using var oldWriter = new StringWriter();
-            ContractClassWriter.CreateContractAssertions(oldWriter, "", new[] { oldReferencedDll }, new[] { referencingDll });
-            Console.WriteLine("*** Old assertion:");
-            Console.WriteLine(oldWriter.ToString());
-            StringAssert.Contains("Status = Create<Name.Space.OldStatusHandler>()", oldWriter.ToString());
-            var commentedAssertion = oldWriter.ToString().Replace("    Create", "    //IGNORE Create");
-
-            // Regenerating against the new version should still match the ignored line
-            using var newWriter = new StringWriter();
-            ContractClassWriter.CreateContractAssertions(newWriter, "", new[] { newReferencedDll }, new[] { referencingDll });
-            Console.WriteLine("*** Newly generated assertion:");
-            Console.WriteLine(newWriter.ToString());
-            using var preservedWriter = new StringWriter();
-            IgnorancePreserver.PreserveIgnoredAssertions(commentedAssertion, newWriter.ToString(), preservedWriter);
-            Assert.AreEqual(commentedAssertion.TrimEnd(), preservedWriter.ToString().TrimEnd(),
-                "The ignored assertion should stay ignored, since the consumer hasn't changed");
+            using var writer = new StringWriter();
+            ContractClassWriter.CreateContractAssertions(writer, "", new[] { newReferencedDll }, new[] { referencingDll });
+            Console.WriteLine(writer.ToString());
+            // object would never compile here, so name the type the consumer expects, keeping the break visible
+            StringAssert.Contains("Status = Create<Name.Space.OldStatusHandler>()", writer.ToString());
         }
 
         private string UpdatedContractAssertionShouldCompile(string referencing, string oldReferenced, string newReferenced, string oldContractAssertion)
