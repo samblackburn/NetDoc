@@ -16,15 +16,17 @@ namespace NetDoc
             m_ReferencedDlls = referencedDlls;
         }
 
-        public string GetTypeName(TypeReference type, GenericInstanceType? declaringType = null, GenericInstanceMethod? methodContext = null)
+        /// <param name="isTypeArgument">True if the type is a generic argument, which the consumer may have chosen</param>
+        public string GetTypeName(TypeReference type, GenericInstanceType? declaringType = null, GenericInstanceMethod? methodContext = null, bool isTypeArgument = false)
         {
             if (type is TypeDefinition def && !CanSeeFromAssertion(type))
             {
                 return StandIn(def, declaringType, methodContext);
             }
-            else if (type is not TypeDefinition && type is not GenericParameter && !type.Name.StartsWith("!") && !CanSeeFromAssertion(type))
+            else if (isTypeArgument && type is not TypeDefinition && type is not GenericParameter && !type.Name.StartsWith("!") && !CanSeeFromAssertion(type))
             {
-                // Defined in a dll the assertion doesn't reference, e.g. another dll in the consuming product
+                // Defined in a dll the assertion doesn't reference, e.g. another dll in the consuming product.
+                // Types in member signatures are left as the consumer references them, so a real break stays visible (and stable, for //IGNORE)
                 return "object";
             }
 
@@ -73,7 +75,7 @@ namespace NetDoc
                     var declaringTypeGenericArgument = declaringType.GenericArguments[ofT.Position];
                     if (declaringTypeGenericArgument != type)
                     {
-                        return GetTypeName(declaringTypeGenericArgument, declaringType, methodContext);
+                        return GetTypeName(declaringTypeGenericArgument, declaringType, methodContext, isTypeArgument: true);
                     }
                     else if ((declaringTypeGenericArgument as GenericParameter)?.Constraints.FirstOrDefault() is {} constraint)
                     {
@@ -93,7 +95,7 @@ namespace NetDoc
             }
 
             var generics = type is GenericInstanceType git
-                ? $"<{String.Join(", ", git.GenericArguments.Select(x => GetTypeName(x, declaringType, methodContext)))}>"
+                ? $"<{String.Join(", ", git.GenericArguments.Select(x => GetTypeName(x, declaringType, methodContext, isTypeArgument: true)))}>"
                 : "";
             if (!string.IsNullOrEmpty(nameSpace)) nameSpace += ".";
             var fullName = $"{nameSpace}{className}{generics}".TrimEnd('&');

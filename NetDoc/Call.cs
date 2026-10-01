@@ -197,7 +197,7 @@ namespace NetDoc
         {
             if (MethodReference is GenericInstanceMethod gim)
             {
-                return "<" + String.Join(",", gim.GenericArguments.Select(x => GetTypeName(x))) + ">";
+                return "<" + String.Join(",", gim.GenericArguments.Select(GetTypeArgumentName)) + ">";
             }
 
             return "";
@@ -238,6 +238,9 @@ namespace NetDoc
 
             return name;
         }
+
+        private string GetTypeArgumentName(TypeReference type) =>
+            m_TypeNames.GetTypeName(type, DeclaringType as GenericInstanceType, MethodReference as GenericInstanceMethod, isTypeArgument: true);
 
         private string GetTypeName(TypeReference type) =>
             m_TypeNames.GetTypeName(type, DeclaringType as GenericInstanceType, MethodReference as GenericInstanceMethod);
