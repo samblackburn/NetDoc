@@ -47,24 +47,22 @@ namespace Tests
         public void SignatureTypeFromDependencyTheReferencedDllNoLongerHasIsNamedAsTheConsumerReferencesIt()
         {
             // The consumer was built against an old version, whose property type came from a dependency
-            const string oldDependency = "namespace Name.Space { public delegate void OldStatusHandler(); }";
-            var oldReferenced = Class("public OldStatusHandler Status { get; set; }", "Consumed");
-            // The new version has its own property type, and no longer depends on the old dependency
-            var newReferenced = Class("public NewStatusHandler Status { get; set; }", "Consumed")
-                                + "namespace Name.Space { public delegate void NewStatusHandler(); }";
-            var referencing = Class("public void SetsStatus(Consumed x) { x.Status = () => {}; }");
+            var dependency = Class("", "DependencyClass");
+            var oldReferenced = Class("public DependencyClass Foo { get; set; }", "Consumed");
+            // The new version no longer has the property, so no longer depends on the dependency
+            var newReferenced = Class("", "Consumed");
+            var referencing = Class("public void SetsFoo(Consumed x) { x.Foo = null; }");
 
-            var consumerDir = TempDir.Get();
-            var oldDependencyDll = ClrAssemblyCompiler.CompileDll(consumerDir, NetFrameworkVersion.Net45, "DependencyAssembly", oldDependency);
-            var oldReferencedDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "ReferencedAssembly", oldReferenced, oldDependencyDll);
-            var referencingDll = ClrAssemblyCompiler.CompileDll(consumerDir, NetFrameworkVersion.Net45, "TestAssembly", referencing, oldReferencedDll, oldDependencyDll);
+            var dependencyDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "DependencyAssembly", dependency);
+            var oldReferencedDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "ReferencedAssembly", oldReferenced, dependencyDll);
+            var referencingDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "TestAssembly", referencing, oldReferencedDll, dependencyDll);
             var newReferencedDll = ClrAssemblyCompiler.CompileDll(TempDir.Get(), NetFrameworkVersion.Net45, "ReferencedAssembly", newReferenced);
 
             using var writer = new StringWriter();
             ContractClassWriter.CreateContractAssertions(writer, "", new[] { newReferencedDll }, new[] { referencingDll });
             Console.WriteLine(writer.ToString());
             // object would never compile here, so name the type the consumer expects, keeping the break visible
-            StringAssert.Contains("Status = Create<Name.Space.OldStatusHandler>()", writer.ToString());
+            StringAssert.Contains("Foo = Create<Name.Space.DependencyClass>()", writer.ToString());
         }
 
         private string UpdatedContractAssertionShouldCompile(string referencing, string oldReferenced, string newReferenced, string oldContractAssertion)
